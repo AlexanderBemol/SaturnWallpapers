@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -85,6 +84,9 @@ fun FullPictureViewScreen(
     navigateBack: () -> Unit
 ) {
     val photoDetailState = photoDetailStateFlow.collectAsState()
+    val photoFilepath = if(photoDetailState.value.isHighQuality)
+        photoDetailState.value.saturnPhoto?.highDefinitionPath.toString()
+        else photoDetailState.value.saturnPhoto?.regularPath.toString()
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
             initialValue = SheetValue.PartiallyExpanded
@@ -95,7 +97,7 @@ fun FullPictureViewScreen(
         scaffoldState = bottomSheetScaffoldState
     ) {
         ImageContainer(
-            filePath = photoDetailState.value.saturnPhoto?.regularPath.toString(),
+            filePath = photoFilepath,
             imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
             isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
             onFavoriteClick = onFavoriteClick,
