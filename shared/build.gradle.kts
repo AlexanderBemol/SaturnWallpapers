@@ -2,7 +2,8 @@ plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.realm)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 kotlin {
@@ -27,7 +28,6 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            //implementation(libs.saturn.sdk)
             implementation(libs.date.time)
             implementation(libs.koin.core)
             implementation(libs.ktor.client.core)
@@ -37,12 +37,19 @@ kotlin {
             implementation(libs.ktor.client.negotation)
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.noarg)
-            implementation(libs.realm.library)
+            implementation(libs.room.runtime)
             implementation(libs.serialization)
+            implementation(libs.sqlite.bundled)
         }
         commonTest.dependencies {
-
+            implementation(project(":shared"))
+            implementation(libs.junit)
+            implementation(libs.koin.testing)
         }
+    }
+
+    dependencies {
+        ksp(libs.room.compiler)
     }
     task("testClasses")
 }
@@ -57,4 +64,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }

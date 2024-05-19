@@ -13,6 +13,6 @@ val viewModelModules = module {
     viewModel { StartingViewModel(get()) }
     viewModel { HomeViewModel(get(), get()) }
     viewModel { params -> PhotoDetailViewModel(get(), get(), params.get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get()) }
 }
 

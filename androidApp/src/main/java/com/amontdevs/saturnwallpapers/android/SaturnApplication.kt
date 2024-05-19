@@ -2,6 +2,7 @@ package com.amontdevs.saturnwallpapers.android
 
 import android.app.Application
 import com.amontdevs.saturnwallpapers.android.di.viewModelModules
+import com.amontdevs.saturnwallpapers.di.getPlatformModules
 import com.amontdevs.saturnwallpapers.di.repositoryModules
 import com.amontdevs.saturnwallpapers.di.sourceModules
 import org.koin.android.ext.koin.androidContext
@@ -20,6 +21,7 @@ class SaturnApplication: Application() {
             androidContext(this@SaturnApplication)
             modules(
                 contextModule,
+                getPlatformModules(),
                 sourceModules,
                 repositoryModules,
                 viewModelModules

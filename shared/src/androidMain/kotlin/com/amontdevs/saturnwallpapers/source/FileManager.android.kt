@@ -31,3 +31,14 @@ actual fun platformGetPicture(fileName: String): SaturnResult<ByteArray> {
         SaturnResult.Error(e)
     }
 }
+
+actual fun platformDeletePicture(fileName: String): SaturnResult<Unit> {
+    return try {
+        val context = GlobalContext.get().get<Context>()
+        val directory = context.getDir("images", Context.MODE_PRIVATE)
+        File(directory, fileName).delete()
+        SaturnResult.Success(Unit)
+    } catch (e: Exception) {
+        SaturnResult.Error(e)
+    }
+}

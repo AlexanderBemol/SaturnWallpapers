@@ -42,7 +42,10 @@ class StartingViewModel(
                     Log.d("StartingViewModel", "Populate failure $result")
                     when (result.e){
                         is AlreadyPopulatedException -> refresh()
-                        else ->_startingState.value = _startingState.value.copy(isLoading = false)
+                        else ->{
+                            Log.d("StartingViewModel", "Populate failure $result")
+                            _startingState.value = _startingState.value.copy(isLoading = false)
+                        }
                     }
                 }
             }
