@@ -1,6 +1,5 @@
 package com.amontdevs.saturnwallpapers.di
 
-import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import com.amontdevs.saturnwallpapers.repository.ISettingsRepository
 import com.amontdevs.saturnwallpapers.repository.SaturnPhotosRepository
@@ -12,29 +11,27 @@ import com.amontdevs.saturnwallpapers.source.IFileManager
 import com.amontdevs.saturnwallpapers.source.ISaturnPhotoDao
 import com.amontdevs.saturnwallpapers.source.ISettingsSource
 import com.amontdevs.saturnwallpapers.source.ITimeProvider
-import com.amontdevs.saturnwallpapers.source.SaturnPhotoDao
+import com.amontdevs.saturnwallpapers.source.SaturnDatabase
 import com.amontdevs.saturnwallpapers.source.SettingsSource
 import com.amontdevs.saturnwallpapers.source.TimeProvider
+import com.amontdevs.saturnwallpapers.utils.ISaturnLogger
+import com.amontdevs.saturnwallpapers.utils.SaturnLogger
 import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
-import io.realm.kotlin.Realm
-import io.realm.kotlin.RealmConfiguration
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import org.koin.core.module.Module
 import org.koin.dsl.module
+
+expect fun getPlatformModules(): Module
+
+fun buildLogger(): ISaturnLogger = SaturnLogger()
 
 fun buildTimeProvider(): ITimeProvider =
     TimeProvider("UTC-05:00")
-
-fun buildRealm(): Realm =
-    Realm.open(RealmConfiguration.create(schema = setOf(SaturnPhoto::class)))
-
 fun buildSettings(): Settings = Settings()
-
-fun buildSaturnPhotoDao(realm: Realm): ISaturnPhotoDao =
-    SaturnPhotoDao(realm)
 
 @OptIn(ExperimentalSerializationApi::class)
 fun buildHTTPClient(): HttpClient = HttpClient(){
@@ -54,38 +51,33 @@ fun buildFileManager(): IFileManager = FileManager()
 
 fun buildSaturnSettings(settings: Settings): ISettingsSource = SettingsSource(settings)
 
+fun provideSaturnPhotoDao(saturnDb: SaturnDatabase): ISaturnPhotoDao = saturnDb.saturnPhotoDao()
+
 val sourceModules = module {
+    single { buildLogger() }
     single { buildTimeProvider() }
-    single { buildRealm() }
-    single { buildSaturnPhotoDao(get()) }
     single { buildHTTPClient() }
     single { buildAPODService(get()) }
     single { buildFileManager() }
     single { buildSettings() }
     single { buildSaturnSettings(get()) }
-}
-
-val testSourceModules = module {
-    single { buildTimeProvider() }
-    single { buildRealm() }
-    single { buildSaturnPhotoDao(get()) }
-    single { buildHTTPClient() }
-    single { buildAPODService(get()) }
+    single { provideSaturnPhotoDao(get()) }
 }
 
 fun buildSaturnPhotosRepository(
+    logger: ISaturnLogger,
     apodService: IAPODService,
     saturnPhotoDao: ISaturnPhotoDao,
     timeProvider: ITimeProvider,
     fileManager: IFileManager,
     saturnSettings: ISettingsSource
 ): ISaturnPhotosRepository =
-    SaturnPhotosRepository(apodService, saturnPhotoDao, timeProvider, fileManager, saturnSettings)
+    SaturnPhotosRepository(logger, apodService, saturnPhotoDao, timeProvider, fileManager, saturnSettings)
 
 fun buildSettingsRepository(settingsSource: ISettingsSource): ISettingsRepository =
     SettingsRepository(settingsSource)
 
 val repositoryModules = module {
-    factory { buildSaturnPhotosRepository(get(), get(), get(), get(), get()) }
+    factory { buildSaturnPhotosRepository(get(), get(), get(), get(), get(), get()) }
     factory { buildSettingsRepository(get()) }
 }

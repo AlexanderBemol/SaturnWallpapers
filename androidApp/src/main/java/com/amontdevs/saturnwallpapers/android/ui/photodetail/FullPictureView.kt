@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -54,12 +53,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.amontdevs.saturnwallpapers.android.MyApplicationTheme
+import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.components.ActionChip
 import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentButton
-import com.amontdevs.saturnwallpapers.android.utils.toAPODUrl
-import com.amontdevs.saturnwallpapers.android.utils.toDisplayableString
+import com.amontdevs.saturnwallpapers.utils.toAPODUrl
+import com.amontdevs.saturnwallpapers.utils.toDisplayableString
+import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
@@ -85,6 +85,9 @@ fun FullPictureViewScreen(
     navigateBack: () -> Unit
 ) {
     val photoDetailState = photoDetailStateFlow.collectAsState()
+    val photoFilepath = if(photoDetailState.value.isHighQuality && photoDetailState.value.saturnPhoto?.mediaType == "image")
+        photoDetailState.value.saturnPhoto?.highDefinitionPath.toString()
+        else photoDetailState.value.saturnPhoto?.regularPath.toString()
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
             initialValue = SheetValue.PartiallyExpanded
@@ -95,7 +98,7 @@ fun FullPictureViewScreen(
         scaffoldState = bottomSheetScaffoldState
     ) {
         ImageContainer(
-            filePath = photoDetailState.value.saturnPhoto?.regularPath.toString(),
+            filePath = photoFilepath,
             imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
             isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
             onFavoriteClick = onFavoriteClick,
@@ -169,7 +172,7 @@ fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
     }
     val openWebsite = {
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(photoDetailState.value.saturnPhoto?.date?.toAPODUrl())
+        intent.data = Uri.parse(photoDetailState.value.saturnPhoto?.timestamp?.toInstant()?.toAPODUrl())
         context.startActivity(intent)
     }
 
@@ -178,7 +181,7 @@ fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
     ) {
         BottomSheetHeader(
             title = photoDetailState.value.saturnPhoto?.title.toString(),
-            displayDate = photoDetailState.value.saturnPhoto?.date?.toDisplayableString().toString(),
+            displayDate = photoDetailState.value.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString().toString(),
             authors = photoDetailState.value.saturnPhoto?.authors,
             isVideo = photoDetailState.value.saturnPhoto?.mediaType.toString() == "video",
             openVideo,
@@ -333,10 +336,10 @@ fun InformationRow(
 @Preview()
 @Composable
 fun FullPictureViewPreview() {
-    MyApplicationTheme(
+    SaturnTheme(
         isDarkTheme = false
     ) {
-        MyApplicationTheme(
+        SaturnTheme(
             isDarkTheme = true
         ) {
             Scaffold {

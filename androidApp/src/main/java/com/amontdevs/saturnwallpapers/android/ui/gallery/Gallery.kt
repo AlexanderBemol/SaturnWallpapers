@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,12 +59,13 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
-import com.amontdevs.saturnwallpapers.android.MyApplicationTheme
+import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
-import com.amontdevs.saturnwallpapers.android.utils.toDisplayableString
+import com.amontdevs.saturnwallpapers.utils.toDisplayableString
+import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
@@ -280,7 +282,9 @@ fun ImageItem(
                 )
                 .build(),
             contentDescription = saturnPhoto.title,
+            contentScale = ContentScale.FillWidth,
             modifier = Modifier
+                .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .clickable { onItemClick(saturnPhoto.id.toString()) }
         )
@@ -292,7 +296,7 @@ fun ImageItem(
                 .padding(4.dp)
         ) {
             Text(
-                text = saturnPhoto.date.toDisplayableString(),
+                text = saturnPhoto.timestamp.toInstant().toDisplayableString(),
                 fontSize = 12.sp,
                 modifier = Modifier
                     .fillMaxHeight()
@@ -317,7 +321,7 @@ fun ImageItem(
 @Preview()
 @Composable
 fun GalleryPreview() {
-    MyApplicationTheme(
+    SaturnTheme(
         isDarkTheme = true
     ) {
         Scaffold(

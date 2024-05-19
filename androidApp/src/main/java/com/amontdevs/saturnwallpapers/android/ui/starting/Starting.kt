@@ -16,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.amontdevs.saturnwallpapers.android.MyApplicationTheme
+import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -64,7 +64,7 @@ fun StartingScreen(
 @Preview
 @Composable
 fun StartingScreenPreview(){
-    MyApplicationTheme(
+    SaturnTheme(
         isDarkTheme = true
     ) {
         Scaffold {

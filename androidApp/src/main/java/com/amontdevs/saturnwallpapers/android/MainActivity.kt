@@ -11,13 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryViewModel
 import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryScreen
 import com.amontdevs.saturnwallpapers.android.ui.home.HomeScreen
 import com.amontdevs.saturnwallpapers.android.ui.home.HomeViewModel
@@ -25,22 +23,18 @@ import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavItem
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
 import com.amontdevs.saturnwallpapers.android.ui.photodetail.FullPictureViewScreen
-import com.amontdevs.saturnwallpapers.android.ui.photodetail.PhotoDetailViewModel
 import com.amontdevs.saturnwallpapers.android.ui.settings.SettingsScreen
 import com.amontdevs.saturnwallpapers.android.ui.starting.StartingScreen
 import com.amontdevs.saturnwallpapers.android.ui.starting.StartingViewModel
-import org.koin.androidx.compose.getStateViewModel
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.context.loadKoinModules
 import org.koin.core.parameter.parametersOf
-import org.koin.dsl.module
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyApplicationTheme {
+            SaturnTheme {
                 AppContent()
             }
         }
@@ -54,7 +48,6 @@ fun AppContent(
 ) {
     val navController = rememberNavController()
     var displayBottomBar by rememberSaveable { mutableStateOf(true) }
-
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -94,12 +87,12 @@ fun AppContent(
                 composable(
                     Navigation.FULL_PICTURE.route + "/{photoId}",
                     arguments = listOf(navArgument("photoId"){
-                        type = NavType.StringType
-                        defaultValue = ""
+                        type = NavType.IntType
+                        defaultValue = 0
                     })
                 ){
                     displayBottomBar = false
-                    it.arguments?.getString("photoId")?.let { photoId ->
+                    it.arguments?.getInt("photoId")?.let { photoId ->
                         FullPictureViewScreen(navController, koinViewModel(parameters = { parametersOf(photoId) }))
                     }
                 }
@@ -123,7 +116,7 @@ fun AppContent(
 @Preview
 @Composable
 fun DefaultPreview() {
-    MyApplicationTheme {
+    SaturnTheme {
         //AppContent(MainViewModel())
     }
 }

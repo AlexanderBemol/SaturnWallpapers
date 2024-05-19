@@ -1,8 +1,6 @@
 package com.amontdevs.saturnwallpapers.android.ui.home
 
 import android.content.Context
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,14 +25,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,12 +39,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.amontdevs.saturnwallpapers.android.MyApplicationTheme
+import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavItem
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
-import com.amontdevs.saturnwallpapers.android.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.utils.toDisplayableString
+import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
@@ -107,7 +104,7 @@ fun TodayData(
         textAlign = TextAlign.Start
     )
     Text(
-        text = homeState.saturnPhoto?.date?.toDisplayableString() ?: "",
+        text = homeState.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString() ?: "",
         style = MaterialTheme.typography.titleMedium
     )
     Spacer(modifier = Modifier.height(16.dp))
@@ -202,7 +199,7 @@ fun FavoriteItem(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = saturnPhoto.date.toDisplayableString(),
+            text = saturnPhoto.timestamp.toInstant().toDisplayableString(),
             style = MaterialTheme.typography.labelMedium
         )
     }
@@ -211,7 +208,7 @@ fun FavoriteItem(
 @Preview
 @Composable
 fun HomePreview() {
-    MyApplicationTheme(
+    SaturnTheme(
         isDarkTheme = true,
         isDynamicColor = true
     ) {

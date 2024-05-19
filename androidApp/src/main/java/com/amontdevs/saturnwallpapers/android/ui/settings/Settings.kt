@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,7 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.amontdevs.saturnwallpapers.android.MyApplicationTheme
+import com.amontdevs.saturnwallpapers.android.SaturnTheme
+import com.amontdevs.saturnwallpapers.android.ui.dialogs.ConfirmDialogLoading
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.model.DataMaxAge
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
@@ -47,22 +47,32 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel){
+fun SettingsScreen(settingsViewModel: SettingsViewModel){
     LaunchedEffect(Unit){
-        viewModel.loadSettingsState()
+        settingsViewModel.loadSettingsState()
     }
     val onDailyWallpaperChanged = { _: Boolean ->
-        viewModel.toggleDailyWallpaperUpdater()
+        settingsViewModel.toggleDailyWallpaperUpdater()
     }
 
     val onDropDownIndexChanged = { option: SettingsMenuOptions ->
-        viewModel.changeDropDownOption(option)
+        settingsViewModel.changeDropDownOption(option)
+    }
+
+    val onDialogConfirm = {
+        settingsViewModel.confirmSettingChangeOperation()
+    }
+
+    val onDialogDismiss = {
+        settingsViewModel.cancelSettingChangeOperation()
     }
 
     SettingsScreen(
-        viewModel.settingsState,
+        settingsViewModel.settingsState,
         onDailyWallpaperChanged,
-        onDropDownIndexChanged
+        onDropDownIndexChanged,
+        onDialogConfirm,
+        onDialogDismiss
     )
 }
 
@@ -70,9 +80,20 @@ fun SettingsScreen(viewModel: SettingsViewModel){
 fun SettingsScreen(
     settingsStateFlow: StateFlow<SettingsState>,
     onDailyWallpaperChanged: (Boolean) -> Unit,
-    onDropDownIndexChanged: (SettingsMenuOptions) -> Unit
+    onDropDownIndexChanged: (SettingsMenuOptions) -> Unit,
+    onDialogConfirm: () -> Unit,
+    onDialogDismiss: () -> Unit
 ){
     val settingsState = settingsStateFlow.collectAsState()
+    if (settingsState.value.confirmQuality.display){
+        ConfirmDialogLoading(
+            title = settingsState.value.confirmQuality.title,
+            description = settingsState.value.confirmQuality.message,
+            onLoadingTitle = settingsState.value.confirmQuality.loadingTitle,
+            onConfirm = onDialogConfirm,
+            onDismiss = onDialogDismiss
+        )
+    }
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -104,25 +125,33 @@ fun SettingsScreen(
                         ScreenOfWallpaperOption(
                             wallpaperScreen = settingsState.value.settings.wallpaperScreen,
                             onIndexChanged = {
-                                onDropDownIndexChanged(WallpaperScreen.fromInt(it))
+                                if (it != settingsState.value.settings.wallpaperScreen.id) {
+                                    onDropDownIndexChanged(WallpaperScreen.fromInt(it))
+                                }
                             }
                         )
                         QualityOption(
                             mediaQuality = settingsState.value.settings.mediaQuality,
                             onIndexChanged = {
-                                onDropDownIndexChanged(MediaQuality.fromInt(it))
+                                if (it != settingsState.value.settings.mediaQuality.id){
+                                    onDropDownIndexChanged(MediaQuality.fromInt(it))
+                                }
                             }
                         )
                         MaxAgeOption(
                             dataMaxAge = settingsState.value.settings.dataMaxAge,
                             onIndexChanged = {
-                                onDropDownIndexChanged(DataMaxAge.fromInt(it))
+                                if (it != settingsState.value.settings.dataMaxAge.id){
+                                    onDropDownIndexChanged(DataMaxAge.fromInt(it))
+                                }
                             }
                         )
                         DefaultDateOption(
                             defaultSaturnPhoto = settingsState.value.settings.defaultSaturnPhoto,
                             onIndexChanged = {
-                                onDropDownIndexChanged(DefaultSaturnPhoto.fromInt(it))
+                                if (it != settingsState.value.settings.defaultSaturnPhoto.id){
+                                    onDropDownIndexChanged(DefaultSaturnPhoto.fromInt(it))
+                                }
                             }
                         )
                     }
@@ -176,9 +205,6 @@ fun AutomaticServiceOption(
     isChecked: Boolean = false,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    var dailyServiceActivated by rememberSaveable {
-        mutableStateOf(false)
-    }
     OptionRow(
         optionExplanation = "When activated, the app is going to automatically " +
                 "update the wallpaper everyday"
@@ -322,7 +348,7 @@ fun OptionDropDown(
 @Preview
 @Composable
 fun SettingsPreview() {
-    MyApplicationTheme(
+    SaturnTheme(
         isDarkTheme = false,
         isDynamicColor = true
     ) {
@@ -334,7 +360,9 @@ fun SettingsPreview() {
             SettingsScreen(
                 MutableStateFlow(SettingsState()),
                 onDailyWallpaperChanged = {},
-                onDropDownIndexChanged = { _, ->}
+                onDropDownIndexChanged = { _, ->},
+                onDialogConfirm = {},
+                onDialogDismiss = {}
             )
             it
         }
