@@ -57,6 +57,7 @@ import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.components.ActionChip
 import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentButton
+import com.amontdevs.saturnwallpapers.resources.DetailsScreen
 import com.amontdevs.saturnwallpapers.utils.toAPODUrl
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
@@ -140,7 +141,7 @@ fun ImageContainer(
                 icon = {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Back",
+                        contentDescription = DetailsScreen.getBackButton(),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -152,7 +153,7 @@ fun ImageContainer(
                         imageVector = if (isFavorite) Icons.Filled.Favorite
                         else Icons.Filled.FavoriteBorder,
                         modifier = Modifier.padding(8.dp),
-                        contentDescription = "Back",
+                        contentDescription = DetailsScreen.getFavoriteButton(),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -210,18 +211,18 @@ fun BottomSheetHeader(
     Spacer(modifier = Modifier.height(8.dp))
     InformationRow(
         vector = Icons.Filled.Info,
-        vectorDescription = "Information",
+        vectorDescription = Icons.Filled.Info.name,
         text = title
     )
     InformationRow(
         vector = Icons.Filled.DateRange,
-        vectorDescription = "Calendar",
+        vectorDescription = Icons.Filled.DateRange.name,
         text = displayDate
     )
     if (authors != null && authors!= "null") {
         InformationRow(
             vector = Icons.Filled.Face,
-            vectorDescription = "Face",
+            vectorDescription = Icons.Filled.Face.name,
             text = authors
         )
     }
@@ -229,11 +230,11 @@ fun BottomSheetHeader(
         Modifier.horizontalScroll(rememberScrollState())
     ) {
         ActionChip(
-            text = "Information",
+            text = DetailsScreen.getInformationButton(),
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_world),
-                    contentDescription = "Website"
+                    contentDescription = DetailsScreen.getWebsiteIcon()
                 )
             }
         ) {
@@ -241,22 +242,22 @@ fun BottomSheetHeader(
         }
         if (!isVideo) {
             ActionChip(
-                text = "Download",
+                text = DetailsScreen.getDownloadButton(),
                 icon = {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_download),
-                        contentDescription = "Download"
+                        contentDescription = DetailsScreen.getDownloadButton()
                     )
                 }
             ) {
 
             }
             ActionChip(
-                text = "Set Wallpaper",
+                text = DetailsScreen.getSetWallpaperButton(),
                 icon = {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_wallpaper),
-                        contentDescription = "Wallpaper"
+                        contentDescription = DetailsScreen.getSetWallpaperButton()
                     )
                 }
             ) {
@@ -264,11 +265,11 @@ fun BottomSheetHeader(
             }
         } else {
             ActionChip(
-                text = "Play Video",
+                text = DetailsScreen.getPlayVideoButton(),
                 icon = {
                     Icon(
                         imageVector = Icons.Filled.PlayArrow,
-                        contentDescription = "Play"
+                        contentDescription = DetailsScreen.getPlayVideoButton()
                     )
                 }
             ) {
@@ -301,7 +302,8 @@ fun DescriptionContent(
     if (showReadMoreButtonState) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = if (isExpanded) "Read Less" else "Read More",
+            text = if (isExpanded) DetailsScreen.getReadLessButton()
+                else DetailsScreen.getReadMoreButton(),
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.clickable {

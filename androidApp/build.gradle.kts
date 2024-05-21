@@ -17,7 +17,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
+        kotlinCompilerExtensionVersion = libs.versions.android.compose.compiler.get()
     }
     packaging {
         resources {
@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.navigation.compose)
+
 
     debugImplementation(libs.compose.ui.tooling)
 

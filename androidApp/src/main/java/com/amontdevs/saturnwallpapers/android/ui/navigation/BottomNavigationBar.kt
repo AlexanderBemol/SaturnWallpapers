@@ -14,6 +14,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
+import com.amontdevs.saturnwallpapers.resources.BottomNavMenu.getGallery
+import com.amontdevs.saturnwallpapers.resources.BottomNavMenu.getHome
+import com.amontdevs.saturnwallpapers.resources.BottomNavMenu.getSettings
 
 @Composable
 fun RowScope.AddItem(
@@ -21,12 +24,18 @@ fun RowScope.AddItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val title = when (screen) {
+        BottomNavItem.Home -> getHome()
+        BottomNavItem.Gallery -> getGallery()
+        BottomNavItem.Settings -> getSettings()
+    }
+
     NavigationBarItem(
-        label = { Text(text = screen.title) },
+        label = { Text(text = title) },
         icon = {
                Icon(
                    painter = painterResource(id = screen.icon),
-                   contentDescription = screen.title)
+                   contentDescription = title)
         },
         selected = isSelected ,
         alwaysShowLabel = true,

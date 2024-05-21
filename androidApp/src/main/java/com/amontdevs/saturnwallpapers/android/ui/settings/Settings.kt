@@ -43,6 +43,7 @@ import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
 import com.amontdevs.saturnwallpapers.model.SettingsMenuOptions
 import com.amontdevs.saturnwallpapers.model.WallpaperScreen
+import com.amontdevs.saturnwallpapers.resources.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -102,7 +103,7 @@ fun SettingsScreen(
     ) {
         Column {
             Text(
-                text = "Settings",
+                text = Settings.getSettingsTitle(),
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -206,11 +207,10 @@ fun AutomaticServiceOption(
     onCheckedChange: (Boolean) -> Unit
 ) {
     OptionRow(
-        optionExplanation = "When activated, the app is going to automatically " +
-                "update the wallpaper everyday"
+        optionExplanation = Settings.getSettingsDailyWallpaperDescription()
     ) {
         Text(
-            text = "Daily wallpaper updater",
+            text = Settings.getSettingsDailyWallpaperTitle(),
             style = MaterialTheme.typography.bodyMedium,
         )
         Switch(
@@ -225,13 +225,18 @@ fun ScreenOfWallpaperOption(
     wallpaperScreen: WallpaperScreen,
     onIndexChanged: (Int) -> Unit
 ) {
-    val menuOptions = WallpaperScreen.entries.map { it.name }
+    val menuOptions = WallpaperScreen.entries.map {
+        when (it) {
+            WallpaperScreen.HOME_SCREEN -> Settings.getSettingsScreenOptionHome()
+            WallpaperScreen.LOCK_SCREEN -> Settings.getSettingsScreenOptionLock()
+            WallpaperScreen.ALL -> Settings.getSettingsScreenOptionBoth()
+        }
+    }
     OptionRow(
-        optionExplanation = "Define the screen where the wallpaper is going to automatically " +
-                "be set when the service is activated."
+        optionExplanation = Settings.getSettingsScreenDescription()
     ) {
         OptionDropDown(
-            title = "Screen",
+            title = Settings.getSettingsScreenTitle(),
             selectedIndex = wallpaperScreen.ordinal,
             values = menuOptions,
             onIndexChanged = onIndexChanged
@@ -244,13 +249,17 @@ fun QualityOption(
     mediaQuality: MediaQuality,
     onIndexChanged: (Int) -> Unit
 ) {
-    val menuOptions = MediaQuality.entries.map { it.name }
+    val menuOptions = MediaQuality.entries.map {
+        when (it) {
+            MediaQuality.NORMAL -> Settings.getSettingsQualityOptionNormal()
+            MediaQuality.HIGH -> Settings.getSettingsQualityOptionHigh()
+        }
+    }
     OptionRow(
-        optionExplanation = "Define the resolution of the images, the high quality requires more " +
-                "storage and network data"
+        optionExplanation = Settings.getSettingsQualityDescription()
     ) {
         OptionDropDown(
-            title = "Calidad",
+            title = Settings.getSettingsQualityTitle(),
             selectedIndex = mediaQuality.id,
             values = menuOptions,
             onIndexChanged = onIndexChanged
@@ -263,13 +272,19 @@ fun MaxAgeOption(
     dataMaxAge: DataMaxAge,
     onIndexChanged: (Int) -> Unit
 ) {
-    val menuOptions = DataMaxAge.entries.map { it.name }
+    val menuOptions = DataMaxAge.entries.map {
+        when(it) {
+            DataMaxAge.ONE_MONTH -> Settings.getSettingsMaxAgeOptionOneMonth()
+            DataMaxAge.THREE_MONTHS -> Settings.getSettingsMaxAgeOptionThreeMonths()
+            DataMaxAge.SIX_MONTHS -> Settings.getSettingsMaxAgeOptionSixMonths()
+            DataMaxAge.ONE_YEAR -> Settings.getSettingsMaxAgeOptionOneYear()
+        }
+    }
     OptionRow(
-        optionExplanation = "Define the maximum of time the images are going to be stored, after " +
-                "that, if a record is older (and is not a favorite) is going to be deleted."
+        optionExplanation = Settings.getSettingsMaxAgeDescription()
     ) {
         OptionDropDown(
-            title = "Max age of data",
+            title = Settings.getSettingsMaxAgeTitle(),
             selectedIndex = dataMaxAge.id,
             values = menuOptions,
             onIndexChanged = onIndexChanged
@@ -282,14 +297,18 @@ fun DefaultDateOption(
     defaultSaturnPhoto: DefaultSaturnPhoto,
     onIndexChanged: (Int) -> Unit
 ) {
-    val menuOptions = DefaultSaturnPhoto.entries.map { it.name }
+    val menuOptions = DefaultSaturnPhoto.entries.map {
+        when(it) {
+            DefaultSaturnPhoto.RANDOM -> Settings.getSettingsDefaultPhotoOptionRandom()
+            DefaultSaturnPhoto.RANDOM_BETWEEN_FAVORITES -> Settings.getSettingsDefaultPhotoOptionRandomBetweenFavorites()
+        }
+    }
     OptionRow(
         addDivider = false,
-        optionExplanation = "For some days, an image can not be retrieved, define if the app is" +
-                " going to take a random photo between your favorites, or a default one instead"
+        optionExplanation = Settings.getSettingsDefaultPhotoDescription()
     ) {
         OptionDropDown(
-            title = "Default photo",
+            title = Settings.getSettingsDefaultPhotoTitle(),
             selectedIndex = defaultSaturnPhoto.id,
             values = menuOptions,
             onIndexChanged

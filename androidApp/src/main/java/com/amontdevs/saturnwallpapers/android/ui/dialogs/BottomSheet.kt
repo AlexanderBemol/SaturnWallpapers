@@ -35,6 +35,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
+import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu
+import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getDownload
+import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getDownloadHigh
+import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getDownloadNormal
+import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getSetBothScreens
+import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getSetHomeScreen
+import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getSetLockScreen
+import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getSetWallpaperFor
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,14 +61,14 @@ fun BottomSheetOptions(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun BottomSheetContent() {
+fun BottomSheetContent(){
     Column(
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Row {
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = "Set as wallpaper for ...",
+                text = getSetWallpaperFor(),
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -71,36 +79,46 @@ fun BottomSheetContent() {
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             IconItemOption(
-                name = "Lock Screen",
+                name = getSetLockScreen(),
                 drawableId =  R.drawable.ic_lock_screen,
-                contentDescription = "Lock Screen"
+                contentDescription = getSetLockScreen()
             ) {}
             IconItemOption(
-                name = "Home Screen",
+                name = getSetHomeScreen(),
                 drawableId = R.drawable.ic_home_screen,
-                contentDescription = "Home Screen"
+                contentDescription = getSetHomeScreen()
             ) {}
             IconItemOption(
-                name = "Both Screens",
+                name = getSetBothScreens(),
                 drawableId = R.drawable.ic_wallpaper,
-                contentDescription = "Wallpaper Icon"
+                contentDescription = getSetBothScreens()
             ) {}
         }
         HorizontalDivider()
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(vertical = 16.dp).clickable {  }
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_download),
-                contentDescription = "Download",
-                modifier = Modifier.height(24.dp),
-            )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row {
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = "Download",
+                text = getDownload(),
                 style = MaterialTheme.typography.titleMedium
             )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceAround
+        ){
+            IconItemOption(
+                name = getDownloadNormal(),
+                drawableId =  R.drawable.ic_download,
+                contentDescription = getDownloadNormal()
+            ) {}
+            IconItemOption(
+                name = getDownloadHigh(),
+                drawableId =  R.drawable.ic_hq,
+                contentDescription = getDownloadHigh(),
+            ) {}
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -152,6 +170,7 @@ fun BottomSheetPreview() {
     ) {
         BottomSheetScaffold(
             scaffoldState = state,
+            //sheetContent = {BottomSheetContent()},
             sheetContent = {BottomSheetContent()},
         ){
 

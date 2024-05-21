@@ -1,0 +1,71 @@
+<resources>
+    <!--- Nav Bar Menu -->
+    <string name="menu_home">Home</string>
+    <string name="menu_gallery">Gallery</string>
+    <string name="menu_settings">Settings</string>
+
+    <!--- Home Screen -->
+    <string name="home_hello">Hello!</string>
+    <string name="home_favorites">Favorite photos</string>"
+
+    <!--- Gallery Screen -->
+    <string name="gallery_title">Gallery</string>
+    <string name="gallery_favorites">Favorites</string>
+
+    <!--- Gallery Bottom Menu -->
+    <string name="gallery_bottom_menu_set_wallpaper">Set wallpaper for...</string>
+    <string name="gallery_bottom_menu_set_wallpaper_lock">Lock screen</string>
+    <string name="gallery_bottom_menu_set_wallpaper_home">Home screen</string>
+    <string name="gallery_bottom_menu_set_wallpaper_both">Both screens</string>
+
+    <string name="gallery_bottom_menu_download">Download...</string>
+    <string name="gallery_bottom_menu_download_normal">Normal quality</string>
+    <string name="gallery_bottom_menu_download_high">High quality</string>
+    <!--- Details Screen -->
+    <string name="details_website_icon">Website</string>">
+    <string name="details_information_button">Information</string>">
+    <string name="details_download_button">Download</string>
+    <string name="details_favorite_button">Favorite</string>
+    <string name="details_back_button">Back</string>
+    <string name="details_set_wallpaper_button">Set wallpaper</string>
+    <string name="details_play_video_button">Play video</string>
+    <string name="details_read_more_button">Read more</string>
+    <string name="details_read_less_button">Read less</string>
+
+
+    <!--- Settings Screen -->
+    <string name="settings_title">Settings</string>
+
+    <string name="settings_daily_wallpaper_title">Daily wallpaper updater</string>
+    <string name="settings_daily_wallpaper_description">When activated, the app is going to automatically
+        update the wallpaper everyday</string>
+
+    <string name="settings_wallpaper_screen_title">Wallpaper screen</string>
+    <string name="settings_wallpaper_screen_description">Define the screen where the wallpaper is
+        going to automatically be set when the service is activated</string>
+    <string name="settings_wallpaper_screen_option_lock">Lock screen</string>
+    <string name="settings_wallpaper_screen_option_home">Home screen</string>
+    <string name="settings_wallpaper_screen_option_both">Both</string>
+
+    <string name="settings_quality_title">Quality</string>
+    <string name="settings_quality_description">Define the resolution of the images, the high quality
+        requires more storage and network data</string>
+    <string name="settings_quality_option_medium">Medium</string>">
+    <string name="settings_quality_option_high">High</string>
+
+    <string name="settings_max_age_title">Max age of data</string>
+    <string name="settings_max_age_description">Define the maximum of time the images are going to be
+        stored, after that, if a record is older (and is not a favorite) is going to be deleted.</string>
+    <string name="settings_max_age_option_one_month">One month</string>
+    <string name="settings_max_age_option_three_months">Three months</string>
+    <string name="settings_max_age_option_six_months">Six months</string>
+    <string name="settings_max_age_option_one_year">One year</string>
+
+    <string name="settings_default_photo_title">Default photo</string>
+    <string name="settings_default_photo_description">For some days, an image can not be retrieved,
+        define if the app is going to take a random photo between your favorites, or a default one instead</string>
+    <string name="settings_default_photo_option_random">Random</string>
+    <string name="settings_default_photo_option_random_favorites">Random between favorites</string>
+
+
+</resources>

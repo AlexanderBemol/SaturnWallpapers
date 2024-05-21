@@ -62,8 +62,12 @@ import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.BottomSheetOptions
+import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavItem
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.resources.Gallery
+import com.amontdevs.saturnwallpapers.resources.Gallery.getFavorites
+import com.amontdevs.saturnwallpapers.resources.Gallery.getTitle
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -120,7 +124,7 @@ fun GalleryScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Gallery",
+                    text = getTitle(),
                     style = MaterialTheme.typography.headlineMedium
                 )
                 IconButton(
@@ -159,14 +163,14 @@ fun Chips(
         FilterChip(
             onClick = { onSortAndFilter(false, true) },
             label = {
-                Text("Favorites", style = MaterialTheme.typography.labelMedium)
+                Text(getFavorites(), style = MaterialTheme.typography.labelMedium)
             },
             selected = galleryState.isFavoriteSelected,
             leadingIcon = if (galleryState.isFavoriteSelected) {
                 {
                     Icon(
                         imageVector = Icons.Filled.Favorite,
-                        contentDescription = "Filled heart icon",
+                        contentDescription = Icons.Filled.Favorite.name,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )
                 }
@@ -174,7 +178,7 @@ fun Chips(
                 {
                     Icon(
                         imageVector = Icons.Filled.FavoriteBorder,
-                        contentDescription = "Not filled heart icon",
+                        contentDescription = Icons.Filled.FavoriteBorder.name,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )
                 }
