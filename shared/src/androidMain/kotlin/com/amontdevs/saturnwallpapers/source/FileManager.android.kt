@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -54,30 +55,39 @@ actual fun platformSavePictureToExternalStorage(filepath: String): SaturnResult<
     // Read the image from the internal memory
     return try {
         val context = GlobalContext.get().get<Context>()
-        val directory = context.getDir("images", Context.MODE_PRIVATE)
-        val bitmap = BitmapFactory.decodeFile(File(directory, filepath).path)
+        val internalDirectory = context.getDir("images", Context.MODE_PRIVATE)
+        val internalFile = File(internalDirectory, filepath).path
 
-        // Create a new file in the public media directory
         val fileName = "SaturnPhoto_${filepath}.jpg"
-        val publicDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-        val newFile = File(publicDirectory, fileName)
-
-        // Save the image to the new file
-        val outputStream = FileOutputStream(newFile)
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        outputStream.flush()
-        outputStream.close()
-
-        // Add the new file to the MediaStore
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/${context.packageName}")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
             }
+
+            val resolver = context.contentResolver
+            val uri  = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+            val outputStream = resolver.openOutputStream(uri!!)
+            val inputStream = File(internalFile).inputStream()
+            inputStream.copyTo(outputStream!!)
+            SaturnResult.Success(Unit)
+        } else {
+            val bitmap = BitmapFactory.decodeFile(internalFile)
+            val picturesDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val newFile = File(picturesDirectory, fileName)
+            if (!picturesDirectory.exists()) {
+                picturesDirectory.mkdirs()
+            }
+
+            // Save the image to the new file
+            val outputStream = FileOutputStream(newFile)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            outputStream.flush()
+            outputStream.close()
+            SaturnResult.Success(Unit)
         }
-        context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        SaturnResult.Success(Unit)
+
     } catch (e: Exception) {
         SaturnResult.Error(e)
     }

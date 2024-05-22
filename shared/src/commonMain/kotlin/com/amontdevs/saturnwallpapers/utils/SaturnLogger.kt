@@ -5,7 +5,7 @@ expect fun logSaturnError(tag: String, e: Exception, message: String?)
 
 interface ISaturnLogger {
     fun logMessage(tag: String, message: String)
-    fun logError(tag: String, e: Exception, message: String?)
+    fun logError(tag: String, e: Exception, message: String? = "")
 }
 class SaturnLogger : ISaturnLogger {
     override fun logMessage(tag: String, message: String) {

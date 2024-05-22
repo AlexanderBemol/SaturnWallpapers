@@ -14,6 +14,8 @@ import com.amontdevs.saturnwallpapers.source.ITimeProvider
 import com.amontdevs.saturnwallpapers.source.SaturnDatabase
 import com.amontdevs.saturnwallpapers.source.SettingsSource
 import com.amontdevs.saturnwallpapers.source.TimeProvider
+import com.amontdevs.saturnwallpapers.system.IWallpaperSetter
+import com.amontdevs.saturnwallpapers.system.WallpaperSetter
 import com.amontdevs.saturnwallpapers.utils.ISaturnLogger
 import com.amontdevs.saturnwallpapers.utils.SaturnLogger
 import com.russhwolf.settings.Settings
@@ -62,6 +64,13 @@ val sourceModules = module {
     single { buildSettings() }
     single { buildSaturnSettings(get()) }
     single { provideSaturnPhotoDao(get()) }
+}
+
+fun buildWallpaperSetter(logger: ISaturnLogger, fileManager: IFileManager): IWallpaperSetter =
+    WallpaperSetter(logger, fileManager)
+
+val systemModules = module {
+    single { buildWallpaperSetter(get(), get()) }
 }
 
 fun buildSaturnPhotosRepository(

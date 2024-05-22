@@ -1,10 +1,12 @@
 package com.amontdevs.saturnwallpapers.android
 
 import android.app.Application
+import com.amontdevs.saturnwallpapers.android.di.androidSystemModules
 import com.amontdevs.saturnwallpapers.android.di.viewModelModules
 import com.amontdevs.saturnwallpapers.di.getPlatformModules
 import com.amontdevs.saturnwallpapers.di.repositoryModules
 import com.amontdevs.saturnwallpapers.di.sourceModules
+import com.amontdevs.saturnwallpapers.di.systemModules
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -23,6 +25,8 @@ class SaturnApplication: Application() {
                 contextModule,
                 getPlatformModules(),
                 sourceModules,
+                systemModules,
+                androidSystemModules,
                 repositoryModules,
                 viewModelModules
             )

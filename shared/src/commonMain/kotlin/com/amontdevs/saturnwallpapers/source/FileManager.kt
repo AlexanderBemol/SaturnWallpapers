@@ -23,5 +23,6 @@ class FileManager: IFileManager {
     override suspend fun savePicture(bytes: ByteReadChannel, date: String) = platformSavePicture(bytes, date)
     override fun deletePicture(fileName: String): SaturnResult<Unit> = platformDeletePicture(fileName)
     override fun getPicture(fileName: String) = platformGetPicture(fileName)
-    override suspend fun savePictureToExternalStorage(filepath: String): SaturnResult<Unit> = platformDeletePicture(filepath)
+    override suspend fun savePictureToExternalStorage(filepath: String): SaturnResult<Unit> =
+        platformSavePictureToExternalStorage(filepath)
 }
