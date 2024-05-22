@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.compose.kmp.compiler)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
@@ -28,6 +29,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(compose.foundation)
+            implementation(compose.material)
+            implementation(compose.runtime)
+            implementation(compose.ui)
+            implementation(compose.components.resources)
             implementation(libs.date.time)
             implementation(libs.koin.core)
             implementation(libs.ktor.client.core)

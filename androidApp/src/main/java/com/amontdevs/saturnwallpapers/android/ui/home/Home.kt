@@ -44,6 +44,7 @@ import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavItem
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.resources.Home
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,7 +100,7 @@ fun TodayData(
     onClick: () -> Unit
 ) {
     Text(
-        text = "Hello!",
+        text = Home.getHomeTitle(),
         style = MaterialTheme.typography.headlineMedium,
         textAlign = TextAlign.Start
     )
@@ -148,14 +149,14 @@ fun LastPhotos(
                 .clickable { onListClick() }
         ) {
             Text(
-                text = "Favorite photos",
+                text = Home.getHomeFavorites(),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Normal,
             )
             Row {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Arrow",
+                    contentDescription = Icons.AutoMirrored.Filled.KeyboardArrowRight.name,
                     Modifier.size(32.dp),
                 )
             }

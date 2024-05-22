@@ -42,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,13 +62,19 @@ import coil.request.ImageRequest
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
-import com.amontdevs.saturnwallpapers.android.ui.dialogs.BottomSheetOptions
+import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
+import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.resources.Gallery.getFavorites
+import com.amontdevs.saturnwallpapers.resources.Gallery.getTitle
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.koin.androidx.compose.getKoin
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import java.io.File
 
 @Composable
@@ -120,7 +127,7 @@ fun GalleryScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Gallery",
+                    text = getTitle(),
                     style = MaterialTheme.typography.headlineMedium
                 )
                 IconButton(
@@ -159,14 +166,14 @@ fun Chips(
         FilterChip(
             onClick = { onSortAndFilter(false, true) },
             label = {
-                Text("Favorites", style = MaterialTheme.typography.labelMedium)
+                Text(getFavorites(), style = MaterialTheme.typography.labelMedium)
             },
             selected = galleryState.isFavoriteSelected,
             leadingIcon = if (galleryState.isFavoriteSelected) {
                 {
                     Icon(
                         imageVector = Icons.Filled.Favorite,
-                        contentDescription = "Filled heart icon",
+                        contentDescription = Icons.Filled.Favorite.name,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )
                 }
@@ -174,7 +181,7 @@ fun Chips(
                 {
                     Icon(
                         imageVector = Icons.Filled.FavoriteBorder,
-                        contentDescription = "Not filled heart icon",
+                        contentDescription = Icons.Filled.FavoriteBorder.name,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )
                 }
@@ -206,6 +213,9 @@ fun GalleryGrid(
     var openBottomSheet by remember {
         mutableStateOf(false)
     }
+    var selectedId by remember {
+        mutableIntStateOf(0)
+    }
     LaunchedEffect(lazyStaggeredGridState.canScrollForward) {
         if (!lazyStaggeredGridState.canScrollForward && lazyStaggeredGridState.firstVisibleItemIndex > 0) {
             Log.d("Gallery", "Bottom Scroll Reached")
@@ -217,13 +227,6 @@ fun GalleryGrid(
             lazyStaggeredGridState.animateScrollToItem(listOfData.size + 1)
         }
     }
-
-    /*
-    LaunchedEffect(listOfData) {
-        if(lazyStaggeredGridState.layoutInfo.totalItemsCount > 0) {
-            lazyStaggeredGridState.animateScrollToItem(0)
-        }
-    }*/
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(2),
         state = lazyStaggeredGridState,
@@ -237,7 +240,10 @@ fun GalleryGrid(
                 modifier = Modifier.animateItemPlacement(
                         animationSpec = tween(500)
                 ),
-                onClickMore = { openBottomSheet = true }
+                onClickMore = {
+                    selectedId = saturnPhoto.id
+                    openBottomSheet = true
+                }
             ) {
                 openPicture(saturnPhoto.id.toString())
                 Log.d("Gallery", "Opening: ${saturnPhoto.id}")
@@ -255,7 +261,9 @@ fun GalleryGrid(
 
     }
     if (openBottomSheet) {
-        BottomSheetOptions {
+        BottomSheetOptions(
+           wallpaperBottomSheetViewModel = getKoin().get<WallpaperBottomSheetViewModel>(parameters = { parametersOf(selectedId) })
+        ) {
             openBottomSheet = false
         }
     }

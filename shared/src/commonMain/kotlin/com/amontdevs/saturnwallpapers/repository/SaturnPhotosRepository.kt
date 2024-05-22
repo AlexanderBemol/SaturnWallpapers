@@ -163,6 +163,7 @@ class SaturnPhotosRepository(
                     //Remove all high quality photos
                     saturnLogger.logMessage(TAG, "Removing all high quality photos")
                     saturnPhotos.forEach {
+                        if(it.mediaType != "image") return@forEach
                         fileManager.deletePicture(it.highDefinitionPath)
                         it.highDefinitionPath = ""
                     }
@@ -240,7 +241,7 @@ class SaturnPhotosRepository(
                         highDefinitionUrl = this.highDefinitionUrl.toString(),
                         regularPath = regularPicture.data,
                         highDefinitionPath =
-                        if(hdPicture is SaturnResult.Success && isHQActivated) hdPicture.data else "",
+                        if(hdPicture is SaturnResult.Success && isHQActivated && this.mediaType == "image") hdPicture.data else "",
                         videoUrl = if(this.mediaType == "video") this.regularDefinitionUrl.toString() else "",
                         isFavorite = false
                     ))

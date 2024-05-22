@@ -25,6 +25,6 @@ interface ISaturnPhotoDao {
     @Query("SELECT * FROM SaturnPhoto WHERE id = :id")
     suspend fun getSaturnPhoto(id: Int): SaturnPhoto
 
-    @Query("DELETE FROM SaturnPhoto WHERE timestamp < :timestamp")
+    @Query("DELETE FROM SaturnPhoto WHERE isFavorite = false AND  timestamp < :timestamp")
     suspend fun deleteOldData(timestamp: Long)
 }
