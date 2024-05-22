@@ -27,7 +27,7 @@
     <string name="details_download_button">Download</string>
     <string name="details_favorite_button">Favorite</string>
     <string name="details_back_button">Back</string>
-    <string name="details_set_wallpaper_button">Set wallpaper</string>
+    <string name="details_set_wallpaper_button">Wallpaper options</string>
     <string name="details_play_video_button">Play video</string>
     <string name="details_read_more_button">Read more</string>
     <string name="details_read_less_button">Read less</string>

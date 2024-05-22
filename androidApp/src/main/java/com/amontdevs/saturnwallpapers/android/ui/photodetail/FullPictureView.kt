@@ -57,12 +57,16 @@ import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.components.ActionChip
 import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentButton
+import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
+import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.resources.DetailsScreen
 import com.amontdevs.saturnwallpapers.utils.toAPODUrl
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.koin.androidx.compose.getKoin
+import org.koin.core.parameter.parametersOf
 import java.io.File
 
 
@@ -181,6 +185,7 @@ fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
         Modifier.padding(horizontal = 16.dp)
     ) {
         BottomSheetHeader(
+            selectedId = photoDetailState.value.saturnPhoto?.id ?: 0,
             title = photoDetailState.value.saturnPhoto?.title.toString(),
             displayDate = photoDetailState.value.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString().toString(),
             authors = photoDetailState.value.saturnPhoto?.authors,
@@ -201,6 +206,7 @@ fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
 
 @Composable
 fun BottomSheetHeader(
+    selectedId: Int,
     title: String,
     displayDate: String,
     authors: String?,
@@ -208,6 +214,9 @@ fun BottomSheetHeader(
     openVideo: () -> Unit,
     openWebsite: () -> Unit,
 ) {
+    var openBottomSheet by remember {
+        mutableStateOf(false)
+    }
     Spacer(modifier = Modifier.height(8.dp))
     InformationRow(
         vector = Icons.Filled.Info,
@@ -237,21 +246,8 @@ fun BottomSheetHeader(
                     contentDescription = DetailsScreen.getWebsiteIcon()
                 )
             }
-        ) {
-            openWebsite()
-        }
+        ) { openWebsite() }
         if (!isVideo) {
-            ActionChip(
-                text = DetailsScreen.getDownloadButton(),
-                icon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_download),
-                        contentDescription = DetailsScreen.getDownloadButton()
-                    )
-                }
-            ) {
-
-            }
             ActionChip(
                 text = DetailsScreen.getSetWallpaperButton(),
                 icon = {
@@ -261,7 +257,7 @@ fun BottomSheetHeader(
                     )
                 }
             ) {
-
+                openBottomSheet = true
             }
         } else {
             ActionChip(
@@ -272,9 +268,15 @@ fun BottomSheetHeader(
                         contentDescription = DetailsScreen.getPlayVideoButton()
                     )
                 }
-            ) {
-                openVideo()
-            }
+            ) { openVideo() }
+        }
+    }
+
+    if (openBottomSheet) {
+        BottomSheetOptions(
+            wallpaperBottomSheetViewModel = getKoin().get<WallpaperBottomSheetViewModel>(parameters = { parametersOf(selectedId) })
+        ) {
+            openBottomSheet = false
         }
     }
 }

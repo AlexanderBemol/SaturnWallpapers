@@ -45,7 +45,7 @@ object DetailsScreen {
 
     @OptIn(ExperimentalResourceApi::class)
     @Composable
-    fun getSetWallpaperButton() = if (LocalInspectionMode.current) "Set wallpaper"
+    fun getSetWallpaperButton() = if (LocalInspectionMode.current) "Wallpaper options"
         else stringResource(Res.string.details_set_wallpaper_button)
 
     @OptIn(ExperimentalResourceApi::class)
