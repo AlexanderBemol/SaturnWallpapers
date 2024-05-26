@@ -1,8 +1,10 @@
 package com.amontdevs.saturnwallpapers.android.ui.settings
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper
 import com.amontdevs.saturnwallpapers.model.DataMaxAge
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
@@ -38,19 +40,27 @@ class SettingsViewModel(
         }
     }
 
-    fun toggleDailyWallpaperUpdater() {
+    fun toggleDailyWallpaperUpdater(context: Context) {
+        val newSettingsState = _settingsState.value.settings.copy(
+            isDailyWallpaperActivated = !_settingsState.value.settings.isDailyWallpaperActivated
+        )
         viewModelScope.launch {
-            when(val result = settingsRepository.saveSettings(
-                _settingsState.value.settings.copy(
-                    isDailyWallpaperActivated = !_settingsState.value.settings.isDailyWallpaperActivated
-                ))
-            ){
+            when(val result = settingsRepository.saveSettings(newSettingsState)){
                 is SaturnResult.Success -> {
-                    _settingsState.value = _settingsState.value.copy(
-                        settings = _settingsState.value.settings.copy(
-                            isDailyWallpaperActivated = !_settingsState.value.settings.isDailyWallpaperActivated
+                    try {
+                        if(newSettingsState.isDailyWallpaperActivated){
+                            WorkerHelper.setWorker(context)
+                        } else {
+                            WorkerHelper.stopWorker(context)
+                        }
+                        _settingsState.value = _settingsState.value.copy(
+                            settings = _settingsState.value.settings.copy(
+                                isDailyWallpaperActivated = !_settingsState.value.settings.isDailyWallpaperActivated
+                            )
                         )
-                    )
+                    } catch (e: Exception) {
+                        Log.e("SettingsViewModel", "Error updating worker: ${e}")
+                    }
                 }
                 is SaturnResult.Error -> {
                     Log.e("SettingsViewModel", "Error updating settings: ${result.e}")

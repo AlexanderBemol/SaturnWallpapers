@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.navigation.compose)
+    implementation(libs.work)
 
 
     debugImplementation(libs.compose.ui.tooling)

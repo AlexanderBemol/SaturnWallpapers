@@ -37,33 +37,28 @@
     <string name="settings_title">Settings</string>
 
     <string name="settings_daily_wallpaper_title">Daily wallpaper updater</string>
-    <string name="settings_daily_wallpaper_description">When activated, the app is going to automatically
-        update the wallpaper everyday</string>
+    <string name="settings_daily_wallpaper_description">When activated, the app is going to automatically update the wallpaper everyday</string>
 
     <string name="settings_wallpaper_screen_title">Wallpaper screen</string>
-    <string name="settings_wallpaper_screen_description">Define the screen where the wallpaper is
-        going to automatically be set when the service is activated</string>
+    <string name="settings_wallpaper_screen_description">Define the screen where the wallpaper is going to automatically be set when the service is activated</string>
     <string name="settings_wallpaper_screen_option_lock">Lock screen</string>
     <string name="settings_wallpaper_screen_option_home">Home screen</string>
     <string name="settings_wallpaper_screen_option_both">Both</string>
 
     <string name="settings_quality_title">Quality</string>
-    <string name="settings_quality_description">Define the resolution of the images, the high quality
-        requires more storage and network data</string>
+    <string name="settings_quality_description">Define the resolution of the images, the high quality requires more storage and network data</string>
     <string name="settings_quality_option_medium">Medium</string>">
     <string name="settings_quality_option_high">High</string>
 
     <string name="settings_max_age_title">Max age of data</string>
-    <string name="settings_max_age_description">Define the maximum of time the images are going to be
-        stored, after that, if a record is older (and is not a favorite) is going to be deleted.</string>
+    <string name="settings_max_age_description">Define the maximum of time the images are going to be stored, after that, if a record is older (and is not a favorite) is going to be deleted.</string>
     <string name="settings_max_age_option_one_month">One month</string>
     <string name="settings_max_age_option_three_months">Three months</string>
     <string name="settings_max_age_option_six_months">Six months</string>
     <string name="settings_max_age_option_one_year">One year</string>
 
     <string name="settings_default_photo_title">Default photo</string>
-    <string name="settings_default_photo_description">For some days, an image can not be retrieved,
-        define if the app is going to take a random photo between your favorites, or a default one instead</string>
+    <string name="settings_default_photo_description">For some days, an image can not be retrieved, define if the app is going to take a random photo between your favorites, or a default one instead</string>
     <string name="settings_default_photo_option_random">Random</string>
     <string name="settings_default_photo_option_random_favorites">Random between favorites</string>
 

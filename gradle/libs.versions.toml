@@ -24,6 +24,7 @@ paletteKtx = "1.0.0"
 room = "2.7.0-alpha02"
 serialization = "1.6.3"
 sqlite = "2.5.0-alpha02"
+work = "2.9.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -59,6 +60,7 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref="room"}
 room-runtime = { module = "androidx.room:room-runtime", version.ref="room" }
 serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+work = { module = "androidx.work:work-runtime-ktx", version.ref = "work"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
