@@ -14,7 +14,7 @@ import org.koin.dsl.module
 val viewModelModules = module {
     viewModel { params -> GalleryViewModel(get(), params.get()) }
     viewModel { StartingViewModel(get()) }
-    viewModel { HomeViewModel(get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get()) }
     viewModel { params -> PhotoDetailViewModel(get(), get(), params.get()) }
     viewModel { SettingsViewModel(get(), get()) }
     viewModel { params -> WallpaperBottomSheetViewModel(get(), get(), get(), get(), params.get()) }

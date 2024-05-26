@@ -53,6 +53,7 @@ import java.io.File
 
 @Composable
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
+    val context = LocalContext.current
     val openPicture = { photoId: String -> navController
         .navigate(Navigation.FULL_PICTURE.route + "/$photoId")
     }
@@ -60,7 +61,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         navController.navigate(BottomNavItem.Gallery.title + "?isFavoriteState=true")
     }
     LaunchedEffect(Unit) {
-        viewModel.loadHomeData()
+        viewModel.loadHomeData(context)
     }
     HomeScreen(
         viewModel.homeState,
