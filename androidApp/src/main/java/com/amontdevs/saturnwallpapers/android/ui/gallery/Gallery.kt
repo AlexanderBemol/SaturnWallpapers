@@ -2,7 +2,12 @@ package com.amontdevs.saturnwallpapers.android.ui.gallery
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -66,6 +71,7 @@ import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.Bo
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.ui.photodetail.FullPictureViewScreen
 import com.amontdevs.saturnwallpapers.resources.Gallery.getFavorites
 import com.amontdevs.saturnwallpapers.resources.Gallery.getTitle
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
@@ -77,13 +83,14 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.io.File
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GalleryScreen(
     navController: NavController,
     viewModel: GalleryViewModel
 ) {
-    val openPicture = { photoId: String -> navController
-        .navigate(Navigation.FULL_PICTURE.route + "/$photoId")
+    val openPicture = { photoId: Int ->
+        navController.navigate(Navigation.FULL_PICTURE.route + "/$photoId")
     }
     val onToggleFiltersVisibility = { viewModel.toggleFiltersVisibility() }
     val onSortAndFilter = { toggleAscSort: Boolean, toggleFilterByFav: Boolean ->
@@ -107,7 +114,7 @@ fun GalleryScreen(
 @Composable
 fun GalleryScreen(
     galleryStateFlow: StateFlow<GalleryState>,
-    onOpenPicture: (String) -> Unit,
+    onOpenPicture: (Int) -> Unit,
     onToggleFiltersVisibility: () -> Unit,
     onSortAndFilter: (toggleAscSort: Boolean, toggleFilterByFav:Boolean) -> Unit,
     onBottomScroll: () -> Unit
@@ -188,6 +195,7 @@ fun Chips(
             }
         )
         Spacer(modifier = Modifier.width(8.dp))
+        /* Temporary disabled
         FilterChip(
             selected = galleryState.isAscSortSelected ,
             onClick = { onSortAndFilter(true, false) },
@@ -198,13 +206,13 @@ fun Chips(
                     else Icons.Filled.KeyboardArrowDown,
                 contentDescription = "Arrow" )}
         )
+        */
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GalleryGrid(
-    openPicture: (String) -> Unit,
+    openPicture: (Int) -> Unit,
     listOfData: List<SaturnPhoto>,
     lazyStaggeredGridState: LazyStaggeredGridState,
     isFetchingPhotos: Boolean,
@@ -237,15 +245,18 @@ fun GalleryGrid(
         items(listOfData, key = {it.id.toString()}){ saturnPhoto ->
             ImageItem(
                 saturnPhoto = saturnPhoto,
-                modifier = Modifier.animateItemPlacement(
-                        animationSpec = tween(500)
-                ),
+                modifier = Modifier
+                    .animateItem(
+                        fadeInSpec = tween(500),
+                        fadeOutSpec = tween(500),
+                        placementSpec = tween(500)
+                    ),
                 onClickMore = {
                     selectedId = saturnPhoto.id
                     openBottomSheet = true
                 }
             ) {
-                openPicture(saturnPhoto.id.toString())
+                openPicture(saturnPhoto.id)
                 Log.d("Gallery", "Opening: ${saturnPhoto.id}")
             }
         }
