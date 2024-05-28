@@ -3,6 +3,10 @@ package com.amontdevs.saturnwallpapers.android.ui.photodetail
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +63,8 @@ import com.amontdevs.saturnwallpapers.android.ui.components.ActionChip
 import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentButton
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
+import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryScreen
+import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryState
 import com.amontdevs.saturnwallpapers.resources.DetailsScreen
 import com.amontdevs.saturnwallpapers.utils.toAPODUrl
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
@@ -120,7 +126,7 @@ fun ImageContainer(
     goBack: () -> Unit,
     onFavoriteClick: () -> Unit
 ) {
-    Box {
+    Box{
         AsyncImage(
             model = ImageRequest
                 .Builder(LocalContext.current)
@@ -294,6 +300,12 @@ fun DescriptionContent(
         style = MaterialTheme.typography.bodySmall,
         overflow = TextOverflow.Ellipsis,
         maxLines = maxLines,
+        modifier = Modifier.animateContentSize(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        ),
         onTextLayout = {
             if (it.lineCount > minimumLineLength - 1) {
                 if (it.isLineEllipsized(minimumLineLength - 1))
@@ -301,11 +313,11 @@ fun DescriptionContent(
             }
         }
     )
-    if (showReadMoreButtonState) {
+    AnimatedVisibility(visible = showReadMoreButtonState) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = if (isExpanded) DetailsScreen.getReadLessButton()
-                else DetailsScreen.getReadMoreButton(),
+            else DetailsScreen.getReadMoreButton(),
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.clickable {
