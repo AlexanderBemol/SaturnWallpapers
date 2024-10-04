@@ -20,14 +20,15 @@ import com.amontdevs.saturnwallpapers.resources.BottomNavMenu.getSettings
 
 @Composable
 fun RowScope.AddItem(
-    screen: BottomNavItem,
+    screen: Navigation,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
     val title = when (screen) {
-        BottomNavItem.Home -> getHome()
-        BottomNavItem.Gallery -> getGallery()
-        BottomNavItem.Settings -> getSettings()
+        Navigation.Home -> getHome()
+        Navigation.Gallery -> getGallery()
+        Navigation.Settings -> getSettings()
+        else -> throw IllegalArgumentException("Invalid screen type")
     }
 
     NavigationBarItem(
@@ -46,9 +47,8 @@ fun RowScope.AddItem(
 @Composable
 fun BottomNavigation(
     navController: NavController = rememberNavController()
-)
-{
-    val items = listOf(BottomNavItem.Home, BottomNavItem.Gallery, BottomNavItem.Settings)
+) {
+    val items = listOf(Navigation.Home, Navigation.Gallery, Navigation.Settings)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route?.split("?")?.get(0)
 

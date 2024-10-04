@@ -4,9 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -14,11 +19,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.DateRange
@@ -27,16 +32,11 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -56,28 +56,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.CachePolicy
 import coil.request.ImageRequest
+import coil.size.Size
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.components.ActionChip
 import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentButton
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
-import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryScreen
-import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryState
+import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
 import com.amontdevs.saturnwallpapers.resources.DetailsScreen
 import com.amontdevs.saturnwallpapers.utils.toAPODUrl
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.getKoin
 import org.koin.core.parameter.parametersOf
 import java.io.File
 
-
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun FullPictureViewScreen(navController: NavController, viewModel: PhotoDetailViewModel) {
+fun FullPictureViewScreen(
+    navController: NavController,
+    viewModel: PhotoDetailViewModel) {
     LaunchedEffect(Unit) {
         viewModel.loadData()
     }
@@ -88,7 +93,7 @@ fun FullPictureViewScreen(navController: NavController, viewModel: PhotoDetailVi
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun FullPictureViewScreen(
     photoDetailStateFlow: StateFlow<PhotoDetailState>,
@@ -99,47 +104,51 @@ fun FullPictureViewScreen(
     val photoFilepath = if(photoDetailState.value.isHighQuality && photoDetailState.value.saturnPhoto?.mediaType == "image")
         photoDetailState.value.saturnPhoto?.highDefinitionPath.toString()
         else photoDetailState.value.saturnPhoto?.regularPath.toString()
-    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(
-            initialValue = SheetValue.PartiallyExpanded
-        )
-    )
-    BottomSheetScaffold(
-        sheetContent = { BottomSheetInformationContent(photoDetailState) },
-        scaffoldState = bottomSheetScaffoldState
+
+    Column(
+        modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
         ImageContainer(
             filePath = photoFilepath,
+            imageId = photoDetailState.value.saturnPhoto?.id.toString(),
             imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
             isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
             onFavoriteClick = onFavoriteClick,
             goBack = navigateBack
         )
+        BottomSheetInformationContent(photoDetailState)
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ImageContainer(
     filePath: String,
+    imageId: String,
     imageDescription: String,
     isFavorite: Boolean,
     goBack: () -> Unit,
     onFavoriteClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val imageRequest = remember(filePath) {
+        ImageRequest.Builder(context)
+            .dispatcher(Dispatchers.IO)
+            .data(context.getPrivateFile(filePath))
+            .memoryCacheKey(filePath)
+            .diskCacheKey(filePath)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .size(Size.ORIGINAL)
+            .build()
+    }
+    val asyncPainter = rememberAsyncImagePainter(imageRequest)
     Box{
-        AsyncImage(
-            model = ImageRequest
-                .Builder(LocalContext.current)
-                .data(
-                    File(
-                        LocalContext.current.getDir("images", Context.MODE_PRIVATE),
-                        filePath
-                    )
-                )
-                .build(),
+        Image(
+            painter = asyncPainter,
             contentDescription = imageDescription,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxHeight()
+            contentScale = ContentScale.FillWidth,
+            modifier = Modifier.fillMaxWidth()
         )
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -157,19 +166,31 @@ fun ImageContainer(
                 }
             ) { goBack() }
 
-            FloatingTransparentButton(
-                icon = {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Filled.Favorite
-                        else Icons.Filled.FavoriteBorder,
-                        modifier = Modifier.padding(8.dp),
-                        contentDescription = DetailsScreen.getFavoriteButton(),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            ) { onFavoriteClick() }
+            Column {
+                FloatingTransparentButton(
+                    icon = {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Filled.Favorite
+                            else Icons.Filled.FavoriteBorder,
+                            modifier = Modifier.padding(8.dp),
+                            contentDescription = DetailsScreen.getFavoriteButton(),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                ) { onFavoriteClick() }
+                Spacer(modifier = Modifier.height(8.dp))
+                FloatingTransparentButton(
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_whole_screen),
+                            modifier = Modifier.padding(8.dp),
+                            contentDescription = DetailsScreen.getFavoriteButton(),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                ) { }
+            }
         }
-
     }
 }
 
@@ -349,23 +370,23 @@ fun InformationRow(
     Spacer(modifier = Modifier.height(8.dp))
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview()
 @Composable
 fun FullPictureViewPreview() {
     SaturnTheme(
-        isDarkTheme = false
+        isDarkTheme = true
     ) {
-        SaturnTheme(
-            isDarkTheme = true
-        ) {
-            Scaffold {
+        Scaffold {
+            SharedTransitionLayout {
                 FullPictureViewScreen(
                     photoDetailStateFlow = MutableStateFlow(PhotoDetailState()),
                     onFavoriteClick = {},
                     navigateBack = {}
                 )
-                it
             }
+
+            it
         }
     }
 }

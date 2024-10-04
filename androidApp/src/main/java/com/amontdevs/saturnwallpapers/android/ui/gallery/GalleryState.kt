@@ -7,5 +7,6 @@ data class GalleryState(
     val isAscSortSelected: Boolean = false,
     val areFiltersVisible: Boolean = false,
     val saturnPhotos: List<SaturnPhoto> = listOf(),
-    val isFetchingPhotos: Boolean = false
+    val isFetchingPhotos: Boolean = false,
+    val isLoaded: Boolean = false
 )

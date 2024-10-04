@@ -22,12 +22,17 @@ class HomeViewModel(
     private val _homeState = MutableStateFlow(HomeState())
     val homeState: StateFlow<HomeState> = _homeState
 
-    fun loadHomeData(context: Context) {
+    init {
+        loadHomeData()
+    }
+
+    private fun loadHomeData() {
         viewModelScope.launch {
             val result = saturnPhotosRepository.getSaturnPhoto(timeProvider.getCurrentTime())
             when (result) {
                 is SaturnResult.Success -> {
                     _homeState.value = _homeState.value.copy(saturnPhoto = result.data)
+                    Log.d("HomeViewModel", "Updated today's photo")
                 }
                 is SaturnResult.Error -> {
                     Log.d("HomeViewModel", "Error: ${result.e}")
@@ -38,6 +43,7 @@ class HomeViewModel(
             when (val result = saturnPhotosRepository.getAllSaturnPhotos()) {
                 is SaturnResult.Success -> {
                     _homeState.value = _homeState.value.copy(favoritePhotos = result.data.filter { it.isFavorite })
+                    Log.d("HomeViewModel", "Updated favorites photos")
                 }
                 is SaturnResult.Error -> {
                     Log.d("HomeViewModel", "Error: ${result.e}")
@@ -47,7 +53,7 @@ class HomeViewModel(
         viewModelScope.launch {
             when (val result = settingsRepository.getSettings()) {
                 is SaturnResult.Success -> {
-                    if (result.data.isDailyWallpaperActivated) WorkerHelper.setWorker(context)
+                    //if (result.data.isDailyWallpaperActivated) WorkerHelper.setWorker(context)
                 }
                 is SaturnResult.Error -> {
                     Log.d("HomeViewModel", "Error: ${result.e}")
