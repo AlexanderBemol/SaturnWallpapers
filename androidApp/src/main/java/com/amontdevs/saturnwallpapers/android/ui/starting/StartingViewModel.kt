@@ -9,6 +9,7 @@ import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -18,21 +19,21 @@ class StartingViewModel(
 ): ViewModel() {
 
     private val _startingState = MutableStateFlow(StartingState())
-    val startingState: StateFlow<StartingState> = _startingState
+    val startingState = _startingState.asStateFlow()
     private val stepSize: Int = (100 / DAYS_OF_DATA.inWholeDays).toInt()
 
-    fun initialize() {
-        populate()
+    init {
+        initialize()
+    }
+
+    private fun initialize() {
         viewModelScope.launch {
-            saturnPhotosRepository.saturnPhotosFlow.collect{
+            saturnPhotosRepository.saturnPhotosFlow.collect {
                 val newProgress = _startingState.value.progress + stepSize
                 _startingState.value = _startingState.value.copy(progress = newProgress)
                 Log.d("StartingViewModel", "Flow: $it")
             }
         }
-    }
-
-    private fun populate(){
         viewModelScope.launch {
             when(val result = saturnPhotosRepository.populate()) {
                 is SaturnResult.Success -> {

@@ -1,15 +1,10 @@
 package com.amontdevs.saturnwallpapers.android.ui.gallery
 
-import android.content.Context
 import android.util.Log
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,8 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -45,7 +38,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,9 +53,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.CachePolicy
 import coil.request.ImageRequest
+import coil.size.Size
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
@@ -71,15 +66,15 @@ import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.Bo
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
-import com.amontdevs.saturnwallpapers.android.ui.photodetail.FullPictureViewScreen
+import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
 import com.amontdevs.saturnwallpapers.resources.Gallery.getFavorites
 import com.amontdevs.saturnwallpapers.resources.Gallery.getTitle
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.getKoin
-import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import java.io.File
 
@@ -90,7 +85,7 @@ fun GalleryScreen(
     viewModel: GalleryViewModel
 ) {
     val openPicture = { photoId: Int ->
-        navController.navigate(Navigation.FULL_PICTURE.route + "/$photoId")
+        navController.navigate(Navigation.Details.title + "/$photoId")
     }
     val onToggleFiltersVisibility = { viewModel.toggleFiltersVisibility() }
     val onSortAndFilter = { toggleAscSort: Boolean, toggleFilterByFav: Boolean ->
@@ -99,9 +94,7 @@ fun GalleryScreen(
     val onBottomScroll = {
         viewModel.onBottomScroll()
     }
-    LaunchedEffect(Unit) {
-        viewModel.loadData()
-    }
+
     GalleryScreen(
         viewModel.galleryState,
         openPicture,
@@ -119,7 +112,8 @@ fun GalleryScreen(
     onSortAndFilter: (toggleAscSort: Boolean, toggleFilterByFav:Boolean) -> Unit,
     onBottomScroll: () -> Unit
 ){
-    val galleryState = galleryStateFlow.collectAsState()
+    Log.d("Gallery", "Gallery Screen")
+    val galleryState = galleryStateFlow.collectAsStateWithLifecycle()
     val lazyStaggeredGridState = rememberLazyStaggeredGridState()
     Surface(
         modifier = Modifier
@@ -151,13 +145,15 @@ fun GalleryScreen(
                 Chips(galleryState.value, onSortAndFilter)
             }
             Spacer(modifier = Modifier.height(8.dp))
-            GalleryGrid(
-                onOpenPicture,
-                galleryState.value.saturnPhotos,
-                lazyStaggeredGridState,
-                galleryState.value.isFetchingPhotos,
-                onBottomScroll
-            )
+            if (galleryState.value.isLoaded) {
+                GalleryGrid(
+                    onOpenPicture,
+                    galleryState.value.saturnPhotos,
+                    lazyStaggeredGridState,
+                    galleryState.value.isFetchingPhotos,
+                    onBottomScroll
+                )
+            }
         }
     }
 }
@@ -210,6 +206,7 @@ fun Chips(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GalleryGrid(
     openPicture: (Int) -> Unit,
@@ -218,6 +215,8 @@ fun GalleryGrid(
     isFetchingPhotos: Boolean,
     onBottomScroll: () -> Unit
 ) {
+
+    Log.d("Gallery", "Grid")
     var openBottomSheet by remember {
         mutableStateOf(false)
     }
@@ -280,26 +279,32 @@ fun GalleryGrid(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ImageItem(
     saturnPhoto: SaturnPhoto,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     onClickMore: () -> Unit,
     onItemClick: (String) -> Unit
 ){
     Column(
         modifier = modifier
     ) {
-        AsyncImage(
-            model = ImageRequest
-                .Builder(LocalContext.current)
-                .data(
-                    File(
-                        LocalContext.current.getDir("images", Context.MODE_PRIVATE),
-                        saturnPhoto.regularPath
-                    )
-                )
-                .build(),
+        val context = LocalContext.current
+        val imageRequest = remember(saturnPhoto.regularPath) {
+            ImageRequest.Builder(context)
+                .dispatcher(Dispatchers.IO)
+                .data(context.getPrivateFile(saturnPhoto.regularPath))
+                .memoryCacheKey(saturnPhoto.regularPath)
+                .diskCacheKey(saturnPhoto.regularPath)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .size(Size.ORIGINAL)
+                .build()
+        }
+        val asyncPainter = rememberAsyncImagePainter(imageRequest)
+        Image(
+            painter = asyncPainter,
             contentDescription = saturnPhoto.title,
             contentScale = ContentScale.FillWidth,
             modifier = Modifier
@@ -307,7 +312,6 @@ fun ImageItem(
                 .clip(RoundedCornerShape(16.dp))
                 .clickable { onItemClick(saturnPhoto.id.toString()) }
         )
-
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
@@ -337,6 +341,7 @@ fun ImageItem(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview()
 @Composable
 fun GalleryPreview() {
@@ -348,13 +353,15 @@ fun GalleryPreview() {
                 BottomNavigation()
             }
         ){
-            GalleryScreen(
-                galleryStateFlow = MutableStateFlow(GalleryState()),
-                onOpenPicture = {},
-                onToggleFiltersVisibility = { /*TODO*/ },
-                onSortAndFilter = {_: Boolean,_:Boolean ->},
-                onBottomScroll = {}
-            )
+            SharedTransitionLayout {
+                GalleryScreen(
+                    galleryStateFlow = MutableStateFlow(GalleryState()),
+                    onOpenPicture = {},
+                    onToggleFiltersVisibility = { /*TODO*/ },
+                    onSortAndFilter = {_: Boolean,_:Boolean ->},
+                    onBottomScroll = {}
+                )
+            }
             it
         }
     }

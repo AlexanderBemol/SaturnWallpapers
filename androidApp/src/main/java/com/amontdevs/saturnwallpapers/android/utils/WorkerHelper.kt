@@ -16,8 +16,7 @@ import kotlin.time.toJavaDuration
 
 class WorkerHelper {
     companion object {
-        fun setWorker(context: Context){
-            val workManager = WorkManager.getInstance(context)
+        fun setWorker(workManager: WorkManager) {
             val workInfo = workManager.getWorkInfosForUniqueWork(SaturnConstants.WORKER_ID)
             val scheduledStates = listOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING, WorkInfo.State.BLOCKED)
 
@@ -50,10 +49,9 @@ class WorkerHelper {
             }
         }
 
-        fun stopWorker(context: Context) {
+        fun stopWorker(workManager: WorkManager) {
             try {
-                WorkManager.getInstance(context)
-                    .cancelUniqueWork(SaturnConstants.WORKER_ID)
+                workManager.cancelUniqueWork(SaturnConstants.WORKER_ID)
                 Log.d("SaturnWorker", "Work cancelled")
             } catch (e: Exception) {
                 Log.d("SaturnWorker", "Failed to cancel work: ${e.message}")

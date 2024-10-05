@@ -151,6 +151,10 @@ class SaturnPhotosRepository(
             DataMaxAge.SIX_MONTHS -> currentTime.minus(180.days)
             DataMaxAge.ONE_YEAR -> currentTime.minus(365.days)
         }
+        saturnPhotoDao.findOldData(validOldestData.toEpochMilliseconds()).forEach {
+            if(it.regularPath.isNotEmpty()) fileManager.deletePicture(it.regularPath)
+            if(it.highDefinitionPath.isNotEmpty()) fileManager.deletePicture(it.highDefinitionPath)
+        }
         saturnPhotoDao.deleteOldData(validOldestData.toEpochMilliseconds())
     }
 
@@ -222,11 +226,12 @@ class SaturnPhotosRepository(
             val regularUrl =
                 if(this.mediaType == "image") this.regularDefinitionUrl else this.thumbnailUrl
 
-            val regularPicture =
-                fileManager.savePicture(apodService.downloadPhoto(regularUrl.toString()), this.date.toString())
+            val regularPhoto = apodService.downloadPhoto(regularUrl.toString())
+            val regularPicture = fileManager.savePicture(regularPhoto, this.date.toString())
 
             val hdPicture = if(isHQActivated && this.highDefinitionUrl != null) {
-                fileManager.savePicture(apodService.downloadPhoto(this.highDefinitionUrl.toString()), this.date.toString())
+                val hqPhoto = apodService.downloadPhoto(this.highDefinitionUrl.toString(),)
+                fileManager.savePicture(hqPhoto, this.date.toString())
             } else regularPicture
 
             when(regularPicture){
@@ -251,6 +256,27 @@ class SaturnPhotosRepository(
             SaturnResult.Error(e)
         }
 
+    }
+
+    private suspend fun downloadHQMedia(){
+        val saturnPhotosWithNoHQ = saturnPhotoDao.getAllSaturnPhotos().filter {
+            it.mediaType == "image" && it.highDefinitionPath == ""
+        }
+        //Updating one by one so we don´t lose any photo path
+        saturnPhotosWithNoHQ.forEach {
+            val savePictureResult = fileManager.savePicture(
+                apodService.downloadPhoto(it.highDefinitionUrl),
+                it.timestamp.toInstant().toCommonFormat()
+            )
+            when(savePictureResult) {
+                is SaturnResult.Success -> {
+                    saturnPhotoDao.updateSaturnPhoto(it.copy(highDefinitionPath = savePictureResult.data))
+                }
+                is SaturnResult.Error -> {
+                    saturnLogger.logError(TAG, savePictureResult.e, savePictureResult.e.message.toString())
+                }
+            }
+        }
     }
 
     companion object {

@@ -1,6 +1,6 @@
 package com.amontdevs.saturnwallpapers.android.ui.home
 
-import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,8 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,35 +35,32 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.CachePolicy
 import coil.request.ImageRequest
+import coil.size.Size
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
-import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavItem
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.resources.Home
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import java.io.File
+import kotlinx.coroutines.Dispatchers
 
 @Composable
 fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
-    val context = LocalContext.current
     val openPicture = { photoId: String -> navController
-        .navigate(Navigation.FULL_PICTURE.route + "/$photoId")
+        .navigate(Navigation.Details.title + "/$photoId")
     }
     val navigateToGalleryFavorites = {
-        navController.navigate(BottomNavItem.Gallery.title + "?isFavoriteState=true")
-    }
-    LaunchedEffect(Unit) {
-        viewModel.loadHomeData(context)
+        navController.navigate(Navigation.Gallery.title + "?isFavoriteState=true")
     }
     HomeScreen(
-        viewModel.homeState,
+        viewModel,
         navigateToGallery = navigateToGalleryFavorites,
         openPicture = openPicture
     )
@@ -72,11 +68,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
 @Composable
 fun HomeScreen(
-    homeStateFlow: StateFlow<HomeState>,
+    viewModel: HomeViewModel,
     navigateToGallery: () -> Unit,
     openPicture: (String) -> Unit
 ) {
-    val homeState = homeStateFlow.collectAsState()
+    val homeState = viewModel.homeState.collectAsStateWithLifecycle()
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -110,24 +106,31 @@ fun TodayData(
         style = MaterialTheme.typography.titleMedium
     )
     Spacer(modifier = Modifier.height(16.dp))
-    AsyncImage(
-        model = ImageRequest
-            .Builder(LocalContext.current)
-            .data(
-                File(
-                    LocalContext.current.getDir("images", Context.MODE_PRIVATE),
-                    homeState.saturnPhoto?.regularPath.toString()
-                )
-            )
-            .build(),
-        contentDescription = homeState.saturnPhoto?.title.toString(),
-        contentScale = ContentScale.Crop,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(260.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-    )
+    val context = LocalContext.current
+    homeState.saturnPhoto?.let { saturnPhoto ->
+        val imageRequest = remember(saturnPhoto.regularPath) {
+            ImageRequest.Builder(context)
+                .dispatcher(Dispatchers.IO)
+                .data(context.getPrivateFile(saturnPhoto.regularPath))
+                .memoryCacheKey(saturnPhoto.regularPath)
+                .diskCacheKey(saturnPhoto.regularPath)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .size(Size.ORIGINAL)
+                .build()
+        }
+        val asyncPainter = rememberAsyncImagePainter(imageRequest)
+        Image(
+            painter = asyncPainter,
+            contentDescription = saturnPhoto.title,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onClick() }
+        )
+    }
     Spacer(modifier = Modifier.height(8.dp))
     Text(
         text = homeState.saturnPhoto?.title.toString(),
@@ -180,17 +183,22 @@ fun FavoriteItem(
     saturnPhoto: SaturnPhoto,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val imageRequest = remember(saturnPhoto.regularPath) {
+        ImageRequest.Builder(context)
+            .dispatcher(Dispatchers.IO)
+            .data(context.getPrivateFile(saturnPhoto.regularPath))
+            .memoryCacheKey(saturnPhoto.regularPath)
+            .diskCacheKey(saturnPhoto.regularPath)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .size(Size.ORIGINAL)
+            .build()
+    }
+    val asyncPainter = rememberAsyncImagePainter(imageRequest)
     Column {
-        AsyncImage(
-            model = ImageRequest
-                .Builder(LocalContext.current)
-                .data(
-                    File(
-                        LocalContext.current.getDir("images", Context.MODE_PRIVATE),
-                        saturnPhoto.regularPath
-                    )
-                )
-                .build(),
+        Image(
+            painter = asyncPainter,
             contentDescription = saturnPhoto.title,
             contentScale = ContentScale.FillHeight,
             modifier = Modifier
@@ -219,11 +227,6 @@ fun HomePreview() {
                 BottomNavigation()
             }
         ){
-            HomeScreen(
-                homeStateFlow = MutableStateFlow(HomeState()),
-                navigateToGallery = {},
-                openPicture = { _: String ->}
-            )
             it
         }
     }

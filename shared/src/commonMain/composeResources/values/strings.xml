@@ -39,6 +39,9 @@
     <string name="settings_daily_wallpaper_title">Daily wallpaper updater</string>
     <string name="settings_daily_wallpaper_description">When activated, the app is going to automatically update the wallpaper everyday</string>
 
+    <string name="settings_download_over_cellular_title">Download over cellular</string>
+    <string name="settings_download_over_cellular_description">When activated, the app is going to download images when the device is not connected to the internet, be careful, images can be huge.</string>
+
     <string name="settings_wallpaper_screen_title">Wallpaper screen</string>
     <string name="settings_wallpaper_screen_description">Define the screen where the wallpaper is going to automatically be set when the service is activated</string>
     <string name="settings_wallpaper_screen_option_lock">Lock screen</string>
