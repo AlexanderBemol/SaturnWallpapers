@@ -33,7 +33,7 @@ class SettingsViewModel(
         loadSettingsState()
     }
 
-    fun loadSettingsState() {
+    private fun loadSettingsState() {
         when(val result = settingsRepository.getSettings()){
             is SaturnResult.Success -> {
                 _settingsState.value = _settingsState.value.copy(settings = result.data)
