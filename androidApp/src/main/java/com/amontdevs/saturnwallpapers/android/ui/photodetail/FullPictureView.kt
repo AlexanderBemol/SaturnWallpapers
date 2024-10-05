@@ -215,7 +215,7 @@ fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
             selectedId = photoDetailState.value.saturnPhoto?.id ?: 0,
             title = photoDetailState.value.saturnPhoto?.title.toString(),
             displayDate = photoDetailState.value.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString().toString(),
-            authors = photoDetailState.value.saturnPhoto?.authors,
+            authors = photoDetailState.value.saturnPhoto?.authors?.replace("\n","").toString(),
             isVideo = photoDetailState.value.saturnPhoto?.mediaType.toString() == "video",
             openVideo,
             openWebsite

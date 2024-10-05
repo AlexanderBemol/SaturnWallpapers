@@ -49,6 +49,7 @@ import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.resources.Home
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
+import com.amontdevs.saturnwallpapers.utils.toShortDisplayableString
 import kotlinx.coroutines.Dispatchers
 
 @Composable
@@ -82,7 +83,7 @@ fun HomeScreen(
         Column {
             TodayData(homeState.value) { openPicture(homeState.value.saturnPhoto?.id.toString()) }
             Spacer(modifier = Modifier.height(16.dp))
-            LastPhotos(
+            FavoritePhotos(
                 favoritesPhotos = homeState.value.favoritePhotos,
                 onListClick = navigateToGallery,
                 onItemClick = openPicture
@@ -139,7 +140,7 @@ fun TodayData(
 }
 
 @Composable
-fun LastPhotos(
+fun FavoritePhotos(
     favoritesPhotos: List<SaturnPhoto>,
     onListClick: () -> Unit,
     onItemClick: (String) -> Unit
@@ -196,7 +197,7 @@ fun FavoriteItem(
             .build()
     }
     val asyncPainter = rememberAsyncImagePainter(imageRequest)
-    Column {
+    Column{
         Image(
             painter = asyncPainter,
             contentDescription = saturnPhoto.title,
@@ -209,9 +210,12 @@ fun FavoriteItem(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = saturnPhoto.timestamp.toInstant().toDisplayableString(),
-            style = MaterialTheme.typography.labelMedium
+            modifier = Modifier.fillMaxWidth(),
+            text = saturnPhoto.timestamp.toInstant().toShortDisplayableString(),
+            style = MaterialTheme.typography.labelMedium,
+            textAlign = TextAlign.Center
         )
+
     }
 }
 
