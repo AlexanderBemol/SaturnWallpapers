@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
@@ -16,7 +17,8 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     private val saturnPhotosRepository: ISaturnPhotosRepository,
     private val timeProvider: ITimeProvider,
-    private val settingsRepository: ISettingsRepository
+    private val settingsRepository: ISettingsRepository,
+    private val workManager: WorkManager
 ): ViewModel() {
 
     private val _homeState = MutableStateFlow(HomeState())
@@ -53,7 +55,7 @@ class HomeViewModel(
         viewModelScope.launch {
             when (val result = settingsRepository.getSettings()) {
                 is SaturnResult.Success -> {
-                    //if (result.data.isDailyWallpaperActivated) WorkerHelper.setWorker(context)
+                    if (result.data.isDailyWallpaperActivated) WorkerHelper.setWorker(workManager)
                 }
                 is SaturnResult.Error -> {
                     Log.d("HomeViewModel", "Error: ${result.e}")

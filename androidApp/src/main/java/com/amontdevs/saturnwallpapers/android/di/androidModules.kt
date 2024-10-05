@@ -1,5 +1,6 @@
 package com.amontdevs.saturnwallpapers.android.di
 
+import androidx.work.WorkManager
 import com.amontdevs.saturnwallpapers.android.system.AndroidWallpaperSetter
 import com.amontdevs.saturnwallpapers.android.system.IAndroidWallpaperSetter
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
@@ -14,9 +15,9 @@ import org.koin.dsl.module
 val viewModelModules = module {
     viewModel { params -> GalleryViewModel(get(), params.get()) }
     viewModel { StartingViewModel(get()) }
-    viewModel { HomeViewModel(get(), get(), get()) }
+    viewModel { params -> HomeViewModel(get(), get(), get(), params.get()) }
     viewModel { params -> PhotoDetailViewModel(get(), get(), params.get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { params -> SettingsViewModel(get(), get(), params.get()) }
     viewModel { params -> WallpaperBottomSheetViewModel(get(), get(), get(), get(), params.get()) }
 }
 

@@ -28,7 +28,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,21 +49,13 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun SettingsScreen(settingsViewModel: SettingsViewModel){
-    val context = LocalContext.current
-    LaunchedEffect(Unit){
-        settingsViewModel.loadSettingsState()
-    }
-    val onDailyWallpaperChanged = { _: Boolean ->
-        settingsViewModel.toggleDailyWallpaperUpdater(context)
-    }
-
+    val onDailyWallpaperChanged = { _: Boolean -> settingsViewModel.toggleDailyWallpaperUpdater() }
+    val onDownloadOverCellularChanged = { _: Boolean -> settingsViewModel.toggleDownloadOverCellular() }
     val onDropDownIndexChanged = { option: SettingsMenuOptions ->
         settingsViewModel.changeDropDownOption(option)
     }
-
-    val onDialogConfirm = {
-        settingsViewModel.confirmSettingChangeOperation()
-    }
+    val onQualityDropDownDialogConfirm = { settingsViewModel.confirmQualityChangeOperation() }
+    val onDownloadOverCellularDialogConfirm = { settingsViewModel.confirmDownloadOverCellular() }
 
     val onDialogDismiss = {
         settingsViewModel.cancelSettingChangeOperation()
@@ -73,8 +64,10 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel){
     SettingsScreen(
         settingsViewModel.settingsState,
         onDailyWallpaperChanged,
+        onDownloadOverCellularChanged,
         onDropDownIndexChanged,
-        onDialogConfirm,
+        onQualityDropDownDialogConfirm,
+        onDownloadOverCellularDialogConfirm,
         onDialogDismiss
     )
 }
@@ -83,17 +76,22 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel){
 fun SettingsScreen(
     settingsStateFlow: StateFlow<SettingsState>,
     onDailyWallpaperChanged: (Boolean) -> Unit,
+    onDownloadOverCellularChanged: (Boolean) -> Unit,
     onDropDownIndexChanged: (SettingsMenuOptions) -> Unit,
-    onDialogConfirm: () -> Unit,
+    onQualityDropDownDialogConfirm: () -> Unit,
+    onDownloadOverCellularDialogConfirm: () -> Unit,
     onDialogDismiss: () -> Unit
 ){
     val settingsState = settingsStateFlow.collectAsState()
-    if (settingsState.value.confirmQuality.display){
+    if (settingsState.value.confirm.display){
         ConfirmDialogLoading(
-            title = settingsState.value.confirmQuality.title,
-            description = settingsState.value.confirmQuality.message,
-            onLoadingTitle = settingsState.value.confirmQuality.loadingTitle,
-            onConfirm = onDialogConfirm,
+            title = settingsState.value.confirm.title,
+            description = settingsState.value.confirm.message,
+            onLoadingTitle = settingsState.value.confirm.loadingTitle,
+            onConfirm = when(settingsState.value.confirm.optionToConfirm){
+                OptionToConfirm.MediaQuality -> onQualityDropDownDialogConfirm
+                OptionToConfirm.DownloadOverCellular -> onDownloadOverCellularDialogConfirm
+            },
             onDismiss = onDialogDismiss
         )
     }
@@ -132,6 +130,10 @@ fun SettingsScreen(
                                     onDropDownIndexChanged(WallpaperScreen.fromInt(it))
                                 }
                             }
+                        )
+                        DownloadsOverCellularOption(
+                            isChecked = settingsState.value.settings.isDownloadOverCellularActivated,
+                            onCheckedChange = onDownloadOverCellularChanged
                         )
                         QualityOption(
                             mediaQuality = settingsState.value.settings.mediaQuality,
@@ -213,6 +215,25 @@ fun AutomaticServiceOption(
     ) {
         Text(
             text = Settings.getSettingsDailyWallpaperTitle(),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Switch(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange
+        )
+    }
+}
+
+@Composable
+fun DownloadsOverCellularOption(
+    isChecked: Boolean = false,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    OptionRow(
+        optionExplanation = Settings.getSettingsDownloadOverCellularDescription()
+    ) {
+        Text(
+            text = Settings.getSettingsDownloadOverCellularTitle(),
             style = MaterialTheme.typography.bodyMedium,
         )
         Switch(
@@ -380,9 +401,11 @@ fun SettingsPreview() {
         ){
             SettingsScreen(
                 MutableStateFlow(SettingsState()),
-                onDailyWallpaperChanged = {},
+                onDailyWallpaperChanged = {_, ->},
+                onDownloadOverCellularChanged = {_, ->},
                 onDropDownIndexChanged = { _, ->},
-                onDialogConfirm = {},
+                onQualityDropDownDialogConfirm = {},
+                onDownloadOverCellularDialogConfirm = {},
                 onDialogDismiss = {}
             )
             it

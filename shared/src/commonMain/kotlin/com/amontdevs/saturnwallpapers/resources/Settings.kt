@@ -11,6 +11,8 @@ import saturnwallpapers.shared.generated.resources.settings_default_photo_descri
 import saturnwallpapers.shared.generated.resources.settings_default_photo_option_random
 import saturnwallpapers.shared.generated.resources.settings_default_photo_option_random_favorites
 import saturnwallpapers.shared.generated.resources.settings_default_photo_title
+import saturnwallpapers.shared.generated.resources.settings_download_over_cellular_description
+import saturnwallpapers.shared.generated.resources.settings_download_over_cellular_title
 import saturnwallpapers.shared.generated.resources.settings_max_age_description
 import saturnwallpapers.shared.generated.resources.settings_max_age_option_one_month
 import saturnwallpapers.shared.generated.resources.settings_max_age_option_one_year
@@ -38,6 +40,16 @@ object Settings {
     @Composable
     fun getSettingsDailyWallpaperTitle() = if (LocalInspectionMode.current) "Daily wallpaper updater"
         else stringResource(Res.string.settings_daily_wallpaper_title)
+
+    @OptIn(ExperimentalResourceApi::class)
+    @Composable
+    fun getSettingsDownloadOverCellularTitle() = if (LocalInspectionMode.current) "Download over cellular"
+        else stringResource(Res.string.settings_download_over_cellular_title)
+
+    @OptIn(ExperimentalResourceApi::class)
+    @Composable
+    fun getSettingsDownloadOverCellularDescription() = if (LocalInspectionMode.current) "When activated, the app is going to download images when the device is not connected to the internet, be careful, images can be huge."
+        else stringResource(Res.string.settings_download_over_cellular_description)
 
     @OptIn(ExperimentalResourceApi::class)
     @Composable

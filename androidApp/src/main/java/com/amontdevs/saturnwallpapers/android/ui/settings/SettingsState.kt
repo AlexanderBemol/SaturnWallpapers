@@ -4,12 +4,17 @@ import com.amontdevs.saturnwallpapers.model.SaturnSettings
 
 data class SettingsState(
     val settings: SaturnSettings = SaturnSettings(),
-    val confirmQuality: ConfirmQualityState = ConfirmQualityState()
+    val confirm: ConfirmState = ConfirmState()
 )
 
-data class ConfirmQualityState(
+data class ConfirmState(
     val display: Boolean = false,
     val title: String = "",
     val message: String = "",
-    val loadingTitle: String = ""
+    val loadingTitle: String = "",
+    val optionToConfirm: OptionToConfirm = OptionToConfirm.MediaQuality
 )
+
+enum class OptionToConfirm {
+    MediaQuality, DownloadOverCellular
+}

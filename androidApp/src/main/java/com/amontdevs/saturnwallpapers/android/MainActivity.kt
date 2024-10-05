@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
@@ -29,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.work.WorkManager
 import com.amontdevs.saturnwallpapers.android.ui.components.SaturnAnimations.customFadeOut
 import com.amontdevs.saturnwallpapers.android.ui.components.fadeInScaleIn
 import com.amontdevs.saturnwallpapers.android.ui.components.fadeInSlideIntoEnd
@@ -72,6 +74,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppContent(navController: NavHostController) {
     Log.d("AppContent", "Recomposing AppContent")
+    val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val navigateToHome = {
         navController.navigate(Navigation.Home.title) {
@@ -113,7 +116,10 @@ fun AppContent(navController: NavHostController) {
                     }
                 ) {
                     Log.d("AppContent", "Recomposing HomeScreen")
-                    HomeScreen(navController, koinViewModel())
+                    HomeScreen(
+                        navController,
+                        koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context)) })
+                    )
                 }
                 composable(
                     Navigation.Gallery.title + "?isFavoriteState={isFavoriteState}",
@@ -150,7 +156,9 @@ fun AppContent(navController: NavHostController) {
                     enterTransition = { this.fadeInSlideIntoStart() },
                     exitTransition = { this.fadeOutSlideOutOfEnd() }
                 ) {
-                    SettingsScreen(koinViewModel())
+                    SettingsScreen(
+                        koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context)) })
+                    )
                 }
                 composable(
                     Navigation.Details.title + "/{photoId}",
