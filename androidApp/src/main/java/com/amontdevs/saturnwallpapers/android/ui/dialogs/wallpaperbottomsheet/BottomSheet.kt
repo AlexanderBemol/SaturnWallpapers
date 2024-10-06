@@ -1,5 +1,6 @@
 package com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,10 +38,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.model.MediaQuality
@@ -63,13 +66,10 @@ fun BottomSheetOptions(
 ) {
     val sheetState = rememberModalBottomSheetState()
     val wallpaperBottomSheetStateFlow = wallpaperBottomSheetViewModel.wallpaperBottomSheetState
-    LaunchedEffect(Unit) {
-        wallpaperBottomSheetViewModel.loadData()
-    }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        windowInsets = BottomSheetDefaults.windowInsets
+        contentWindowInsets = {BottomSheetDefaults.windowInsets}
     ) {
         BottomSheetContent(
             wallpaperBottomSheetStateFlow = wallpaperBottomSheetStateFlow,
@@ -87,7 +87,8 @@ fun BottomSheetOptions(
             },
             onDownloadHighClick = {
                 wallpaperBottomSheetViewModel.downloadPhoto(MediaQuality.HIGH)
-            }
+            },
+            onDismiss = onDismiss
         )
     }
 }
@@ -101,8 +102,17 @@ fun BottomSheetContent(
     onWallpaperBothClick: () -> Unit,
     onDownloadNormalClick: () -> Unit,
     onDownloadHighClick: () -> Unit,
+    onDismiss: () -> Unit = {}
 ){
-    val wallpaperBottomSheetState = wallpaperBottomSheetStateFlow.collectAsState()
+    val wallpaperBottomSheetState = wallpaperBottomSheetStateFlow.collectAsStateWithLifecycle()
+    if(wallpaperBottomSheetState.value.displayToast){
+        Toast.makeText(
+            LocalContext.current,
+            wallpaperBottomSheetState.value.toastMessage,
+            Toast.LENGTH_SHORT
+        ).show()
+        onDismiss()
+    }
     Column(
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {

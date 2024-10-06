@@ -31,7 +31,11 @@ class WallpaperBottomSheetViewModel(
     private val _wallpaperBottomSheetState = MutableStateFlow(WallpaperBottomSheetState())
     val wallpaperBottomSheetState: StateFlow<WallpaperBottomSheetState> = _wallpaperBottomSheetState
 
-    fun loadData() {
+    init {
+        loadData()
+    }
+
+    private fun loadData() {
         viewModelScope.launch {
             when (val result = saturnPhotosRepository.getSaturnPhoto(photoId)) {
                 is SaturnResult.Success -> {

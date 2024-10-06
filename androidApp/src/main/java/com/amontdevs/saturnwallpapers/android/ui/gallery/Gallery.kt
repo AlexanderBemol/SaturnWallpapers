@@ -1,9 +1,11 @@
 package com.amontdevs.saturnwallpapers.android.ui.gallery
 
 import android.util.Log
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -62,6 +64,7 @@ import coil.size.Size
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
+import com.amontdevs.saturnwallpapers.android.ui.components.SaturnImage
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
@@ -72,17 +75,17 @@ import com.amontdevs.saturnwallpapers.resources.Gallery.getTitle
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.getKoin
 import org.koin.core.parameter.parametersOf
-import java.io.File
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GalleryScreen(
     navController: NavController,
-    viewModel: GalleryViewModel
+    viewModel: GalleryViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     val openPicture = { photoId: Int ->
         navController.navigate(Navigation.Details.title + "/$photoId")
@@ -97,6 +100,8 @@ fun GalleryScreen(
 
     GalleryScreen(
         viewModel.galleryState,
+        sharedTransitionScope,
+        animatedContentScope,
         openPicture,
         onToggleFiltersVisibility,
         onSortAndFilter,
@@ -104,9 +109,12 @@ fun GalleryScreen(
     )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GalleryScreen(
     galleryStateFlow: StateFlow<GalleryState>,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onOpenPicture: (Int) -> Unit,
     onToggleFiltersVisibility: () -> Unit,
     onSortAndFilter: (toggleAscSort: Boolean, toggleFilterByFav:Boolean) -> Unit,
@@ -147,6 +155,8 @@ fun GalleryScreen(
             Spacer(modifier = Modifier.height(8.dp))
             if (galleryState.value.isLoaded) {
                 GalleryGrid(
+                    sharedTransitionScope,
+                    animatedContentScope,
                     onOpenPicture,
                     galleryState.value.saturnPhotos,
                     lazyStaggeredGridState,
@@ -209,13 +219,14 @@ fun Chips(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GalleryGrid(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     openPicture: (Int) -> Unit,
     listOfData: List<SaturnPhoto>,
     lazyStaggeredGridState: LazyStaggeredGridState,
     isFetchingPhotos: Boolean,
     onBottomScroll: () -> Unit
 ) {
-
     Log.d("Gallery", "Grid")
     var openBottomSheet by remember {
         mutableStateOf(false)
@@ -243,6 +254,8 @@ fun GalleryGrid(
     ) {
         items(listOfData, key = {it.id.toString()}){ saturnPhoto ->
             ImageItem(
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
                 saturnPhoto = saturnPhoto,
                 modifier = Modifier
                     .animateItem(
@@ -282,6 +295,8 @@ fun GalleryGrid(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ImageItem(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     saturnPhoto: SaturnPhoto,
     modifier: Modifier = Modifier,
     onClickMore: () -> Unit,
@@ -290,28 +305,21 @@ fun ImageItem(
     Column(
         modifier = modifier
     ) {
-        val context = LocalContext.current
-        val imageRequest = remember(saturnPhoto.regularPath) {
-            ImageRequest.Builder(context)
-                .dispatcher(Dispatchers.IO)
-                .data(context.getPrivateFile(saturnPhoto.regularPath))
-                .memoryCacheKey(saturnPhoto.regularPath)
-                .diskCacheKey(saturnPhoto.regularPath)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .size(Size.ORIGINAL)
-                .build()
+        with(sharedTransitionScope) {
+            SaturnImage(
+                filePath = saturnPhoto.regularPath,
+                contentDescription = saturnPhoto.title,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .sharedElement(
+                        sharedTransitionScope.rememberSharedContentState(key = "image-${saturnPhoto.id}"),
+                        animatedVisibilityScope = animatedContentScope
+                    )
+                    .clickable { onItemClick(saturnPhoto.id.toString()) }
+            )
         }
-        val asyncPainter = rememberAsyncImagePainter(imageRequest)
-        Image(
-            painter = asyncPainter,
-            contentDescription = saturnPhoto.title,
-            contentScale = ContentScale.FillWidth,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .clickable { onItemClick(saturnPhoto.id.toString()) }
-        )
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
@@ -354,6 +362,7 @@ fun GalleryPreview() {
             }
         ){
             SharedTransitionLayout {
+                /*
                 GalleryScreen(
                     galleryStateFlow = MutableStateFlow(GalleryState()),
                     onOpenPicture = {},
@@ -361,6 +370,7 @@ fun GalleryPreview() {
                     onSortAndFilter = {_: Boolean,_:Boolean ->},
                     onBottomScroll = {}
                 )
+                 */
             }
             it
         }

@@ -1,5 +1,8 @@
 package com.amontdevs.saturnwallpapers.android.ui.home
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +45,7 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.size.Size
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
+import com.amontdevs.saturnwallpapers.android.ui.components.SaturnImage
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
 import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
@@ -49,10 +53,17 @@ import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.resources.Home
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
+import com.amontdevs.saturnwallpapers.utils.toShortDisplayableString
 import kotlinx.coroutines.Dispatchers
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
+) {
     val openPicture = { photoId: String -> navController
         .navigate(Navigation.Details.title + "/$photoId")
     }
@@ -62,15 +73,20 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
     HomeScreen(
         viewModel,
         navigateToGallery = navigateToGalleryFavorites,
-        openPicture = openPicture
+        openPicture = openPicture,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedContentScope = animatedContentScope
     )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     navigateToGallery: () -> Unit,
-    openPicture: (String) -> Unit
+    openPicture: (String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     val homeState = viewModel.homeState.collectAsStateWithLifecycle()
     Surface(
@@ -80,10 +96,16 @@ fun HomeScreen(
         color = MaterialTheme.colorScheme.background,
     ){
         Column {
-            TodayData(homeState.value) { openPicture(homeState.value.saturnPhoto?.id.toString()) }
+            TodayData(
+                homeState.value,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope
+            ) { openPicture(homeState.value.saturnPhoto?.id.toString()) }
             Spacer(modifier = Modifier.height(16.dp))
-            LastPhotos(
+            FavoritePhotos(
                 favoritesPhotos = homeState.value.favoritePhotos,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
                 onListClick = navigateToGallery,
                 onItemClick = openPicture
             )
@@ -91,9 +113,12 @@ fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun TodayData(
     homeState: HomeState,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onClick: () -> Unit
 ) {
     Text(
@@ -106,41 +131,41 @@ fun TodayData(
         style = MaterialTheme.typography.titleMedium
     )
     Spacer(modifier = Modifier.height(16.dp))
-    val context = LocalContext.current
-    homeState.saturnPhoto?.let { saturnPhoto ->
-        val imageRequest = remember(saturnPhoto.regularPath) {
-            ImageRequest.Builder(context)
-                .dispatcher(Dispatchers.IO)
-                .data(context.getPrivateFile(saturnPhoto.regularPath))
-                .memoryCacheKey(saturnPhoto.regularPath)
-                .diskCacheKey(saturnPhoto.regularPath)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .size(Size.ORIGINAL)
-                .build()
+    with(sharedTransitionScope) {
+        homeState.saturnPhoto?.let { saturnPhoto ->
+            SaturnImage(
+                filePath = saturnPhoto.regularPath,
+                contentDescription = saturnPhoto.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(260.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .sharedElement(
+                        sharedTransitionScope.rememberSharedContentState(key = "image-${saturnPhoto.id}"),
+                        animatedVisibilityScope = animatedContentScope
+                    )
+                    .clickable { onClick() }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = saturnPhoto.title,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.sharedElement(
+                    sharedTransitionScope.rememberSharedContentState(key = "title-${saturnPhoto.id}"),
+                    animatedVisibilityScope = animatedContentScope
+                )
+            )
         }
-        val asyncPainter = rememberAsyncImagePainter(imageRequest)
-        Image(
-            painter = asyncPainter,
-            contentDescription = saturnPhoto.title,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .clickable { onClick() }
-        )
     }
-    Spacer(modifier = Modifier.height(8.dp))
-    Text(
-        text = homeState.saturnPhoto?.title.toString(),
-        style = MaterialTheme.typography.labelLarge
-    )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun LastPhotos(
+fun FavoritePhotos(
     favoritesPhotos: List<SaturnPhoto>,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onListClick: () -> Unit,
     onItemClick: (String) -> Unit
 ) {
@@ -171,47 +196,50 @@ fun LastPhotos(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(favoritesPhotos){
-                FavoriteItem(saturnPhoto = it) { onItemClick(it.id.toString()) }
+                FavoriteItem(
+                    saturnPhoto = it,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope
+                ) { onItemClick(it.id.toString()) }
             }
         }
     }
 
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun FavoriteItem(
     saturnPhoto: SaturnPhoto,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    val imageRequest = remember(saturnPhoto.regularPath) {
-        ImageRequest.Builder(context)
-            .dispatcher(Dispatchers.IO)
-            .data(context.getPrivateFile(saturnPhoto.regularPath))
-            .memoryCacheKey(saturnPhoto.regularPath)
-            .diskCacheKey(saturnPhoto.regularPath)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .size(Size.ORIGINAL)
-            .build()
-    }
-    val asyncPainter = rememberAsyncImagePainter(imageRequest)
-    Column {
-        Image(
-            painter = asyncPainter,
-            contentDescription = saturnPhoto.title,
-            contentScale = ContentScale.FillHeight,
-            modifier = Modifier
-                .width(100.dp)
-                .height(200.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .clickable { onClick() }
-        )
+    Column{
+        with(sharedTransitionScope) {
+            SaturnImage(
+                filePath = saturnPhoto.regularPath,
+                contentDescription = saturnPhoto.title,
+                contentScale = ContentScale.FillHeight,
+                modifier = Modifier
+                    .width(100.dp)
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .sharedElement(
+                        sharedTransitionScope.rememberSharedContentState(key = "image-${saturnPhoto.id}"),
+                        animatedVisibilityScope = animatedContentScope
+                    )
+                    .clickable { onClick() }
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = saturnPhoto.timestamp.toInstant().toDisplayableString(),
-            style = MaterialTheme.typography.labelMedium
+            modifier = Modifier.fillMaxWidth(),
+            text = saturnPhoto.timestamp.toInstant().toShortDisplayableString(),
+            style = MaterialTheme.typography.labelMedium,
+            textAlign = TextAlign.Center
         )
+
     }
 }
 

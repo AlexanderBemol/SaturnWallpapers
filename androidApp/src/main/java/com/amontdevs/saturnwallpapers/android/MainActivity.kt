@@ -6,10 +6,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -71,6 +74,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppContent(navController: NavHostController) {
     Log.d("AppContent", "Recomposing AppContent")
@@ -95,89 +99,96 @@ fun AppContent(navController: NavHostController) {
             }
         ) { paddingValues ->
             Log.d("AppContent", "Recomposing Surface")
-            NavHost(
-                navController = navController,
-                startDestination = Navigation.Loading.title,
-                modifier = Modifier.padding(paddingValues)
-            ) {
-                composable(
-                    Navigation.Home.title,
-                    enterTransition = {
-                        when (this.initialState.destination.toFixedRoute()) {
-                            Navigation.Gallery.title, Navigation.Settings.title -> fadeInSlideIntoEnd()
-                            else -> fadeIn()
-                        }
-                    },
-                    exitTransition = {
-                        when (this.targetState.destination.toFixedRoute()) {
-                            Navigation.Gallery.title, Navigation.Settings.title -> fadeOutSlideOutOfStart()
-                            else -> fadeOut()
-                        }
-                    }
+            SharedTransitionLayout {
+                NavHost(
+                    navController = navController,
+                    startDestination = Navigation.Loading.title,
+                    modifier = Modifier.padding(paddingValues)
                 ) {
-                    Log.d("AppContent", "Recomposing HomeScreen")
-                    HomeScreen(
-                        navController,
-                        koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context)) })
-                    )
-                }
-                composable(
-                    Navigation.Gallery.title + "?isFavoriteState={isFavoriteState}",
-                    arguments = listOf(navArgument("isFavoriteState"){
-                        type = NavType.BoolType
-                        defaultValue = false
-                    }),
-                    enterTransition = {
-                        when (this.initialState.destination.toFixedRoute()) {
-                            Navigation.Details.title -> fadeInSlideIntoUp()
-                            Navigation.Home.title -> fadeInSlideIntoStart()
-                            Navigation.Settings.title -> fadeInSlideIntoEnd()
-                            else -> fadeIn()
+                    composable(
+                        Navigation.Home.title,
+                        enterTransition = {
+                            when (this.initialState.destination.toFixedRoute()) {
+                                Navigation.Gallery.title, Navigation.Settings.title -> fadeInSlideIntoEnd()
+                                else -> fadeIn()
+                            }
+                        },
+                        exitTransition = {
+                            when (this.targetState.destination.toFixedRoute()) {
+                                Navigation.Gallery.title, Navigation.Settings.title -> fadeOutSlideOutOfStart()
+                                else -> fadeOut()
+                            }
                         }
-                    },
-                    exitTransition = {
-                        when (this.targetState.destination.toFixedRoute()) {
-                            //Navigation.FULL_PICTURE.route -> fadeOutSlideOutOfDown()
-                            Navigation.Home.title -> fadeOutSlideOutOfEnd()
-                            Navigation.Settings.title -> fadeOutSlideOutOfStart()
-                            else -> fadeOut()
-                        }
-                    }
-                ) {
-                    it.arguments?.getBoolean("isFavoriteState")?.let { isFavoriteState ->
-                        GalleryScreen(
+                    ) {
+                        Log.d("AppContent", "Recomposing HomeScreen")
+                        HomeScreen(
                             navController,
-                            koinViewModel(parameters = { parametersOf(isFavoriteState) })
+                            koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context)) }),
+                            this@SharedTransitionLayout,
+                            this@composable
                         )
                     }
-                }
-                composable(
-                    Navigation.Settings.title,
-                    enterTransition = { this.fadeInSlideIntoStart() },
-                    exitTransition = { this.fadeOutSlideOutOfEnd() }
-                ) {
-                    SettingsScreen(
-                        koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context)) })
-                    )
-                }
-                composable(
-                    Navigation.Details.title + "/{photoId}",
-                    //enterTransition = { fadeInScaleIn() },
-                    //exitTransition = { fadeOutScaleOut() },
-                    arguments = listOf(navArgument("photoId"){
-                        type = NavType.IntType
-                        defaultValue = 0
-                    })
-                ){
-                    it.arguments?.getInt("photoId")?.let { photoId ->
-                        FullPictureViewScreen(
-                            navController,
-                            koinViewModel(parameters = { parametersOf(photoId) })
+                    composable(
+                        Navigation.Gallery.title + "?isFavoriteState={isFavoriteState}",
+                        arguments = listOf(navArgument("isFavoriteState"){
+                            type = NavType.BoolType
+                            defaultValue = false
+                        }),
+                        enterTransition = {
+                            when (this.initialState.destination.toFixedRoute()) {
+                                Navigation.Details.title -> fadeInSlideIntoUp()
+                                Navigation.Home.title -> fadeInSlideIntoStart()
+                                Navigation.Settings.title -> fadeInSlideIntoEnd()
+                                else -> fadeIn()
+                            }
+                        },
+                        exitTransition = {
+                            when (this.targetState.destination.toFixedRoute()) {
+                                Navigation.Home.title -> fadeOutSlideOutOfEnd()
+                                Navigation.Settings.title -> fadeOutSlideOutOfStart()
+                                else -> fadeOut()
+                            }
+                        }
+                    ) {
+                        it.arguments?.getBoolean("isFavoriteState")?.let { isFavoriteState ->
+                            GalleryScreen(
+                                navController,
+                                koinViewModel(parameters = { parametersOf(isFavoriteState) }),
+                                this@SharedTransitionLayout,
+                                this@composable
+                            )
+                        }
+                    }
+                    composable(
+                        Navigation.Settings.title,
+                        enterTransition = { this.fadeInSlideIntoStart() },
+                        exitTransition = { this.fadeOutSlideOutOfEnd() }
+                    ) {
+                        SettingsScreen(
+                            koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context)) })
                         )
                     }
-                }
-                composable(Navigation.Loading.title) {
-                    StartingScreen(navigateToHome = navigateToHome)
+                    composable(
+                        Navigation.Details.title + "/{photoId}",
+                        //enterTransition = { fadeInScaleIn() },
+                        //exitTransition = { fadeOutScaleOut() },
+                        arguments = listOf(navArgument("photoId"){
+                            type = NavType.IntType
+                            defaultValue = 0
+                        })
+                    ){
+                        it.arguments?.getInt("photoId")?.let { photoId ->
+                            FullPictureViewScreen(
+                                navController,
+                                koinViewModel(parameters = { parametersOf(photoId) }),
+                                this@SharedTransitionLayout,
+                                this@composable
+                            )
+                        }
+                    }
+                    composable(Navigation.Loading.title) {
+                        StartingScreen(navigateToHome = navigateToHome)
+                    }
                 }
             }
         }

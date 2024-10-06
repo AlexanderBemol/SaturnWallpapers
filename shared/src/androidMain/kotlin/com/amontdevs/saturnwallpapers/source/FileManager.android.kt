@@ -55,10 +55,10 @@ private fun downscaleBitmap(bitmap: Bitmap, downscaleFactor: Int = 2): Bitmap {
 }
 
 private fun findDownscaleFactor(size: Int): Int{
-    val validSize = 1024 * 1024 * 30 // 30MB
+    val validSize = 1024 * 1024 * 50 // 50MB
     var factor = 1
-    while (factor * size > validSize) {
-        factor *= 2
+    while (size/factor > validSize) {
+        factor += 1
     }
     return factor
 }

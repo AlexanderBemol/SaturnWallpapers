@@ -1,17 +1,15 @@
 package com.amontdevs.saturnwallpapers.android.ui.photodetail
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -54,16 +53,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import coil.size.Size
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.components.ActionChip
 import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentButton
+import com.amontdevs.saturnwallpapers.android.ui.components.SaturnImage
+import com.amontdevs.saturnwallpapers.android.ui.components.customScaleIn
+import com.amontdevs.saturnwallpapers.android.ui.components.fadeInScaleIn
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
@@ -76,18 +75,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.getKoin
 import org.koin.core.parameter.parametersOf
-import java.io.File
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun FullPictureViewScreen(
     navController: NavController,
-    viewModel: PhotoDetailViewModel) {
+    viewModel: PhotoDetailViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+) {
     LaunchedEffect(Unit) {
         viewModel.loadData()
     }
     FullPictureViewScreen(
         viewModel.fullViewState,
+        sharedTransitionScope,
+        animatedContentScope,
         onFavoriteClick = { viewModel.onFavoriteClick() },
         navigateBack = { navController.navigateUp() }
     )
@@ -97,59 +100,90 @@ fun FullPictureViewScreen(
 @Composable
 fun FullPictureViewScreen(
     photoDetailStateFlow: StateFlow<PhotoDetailState>,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onFavoriteClick: () -> Unit,
-    navigateBack: () -> Unit
+    navigateBack: () -> Unit,
 ) {
     val photoDetailState = photoDetailStateFlow.collectAsState()
-    val photoFilepath = if(photoDetailState.value.isHighQuality && photoDetailState.value.saturnPhoto?.mediaType == "image")
-        photoDetailState.value.saturnPhoto?.highDefinitionPath.toString()
-        else photoDetailState.value.saturnPhoto?.regularPath.toString()
-
-    Column(
-        modifier = Modifier.verticalScroll(rememberScrollState())
-    ) {
-        ImageContainer(
-            filePath = photoFilepath,
-            imageId = photoDetailState.value.saturnPhoto?.id.toString(),
-            imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
-            isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
-            onFavoriteClick = onFavoriteClick,
-            goBack = navigateBack
-        )
-        BottomSheetInformationContent(photoDetailState)
+    val photoFilepath = photoDetailState.value.saturnPhoto?.regularPath.toString()
+    val displayFullscreen = remember { mutableStateOf(false) }
+    val onFullscreenClick = {
+        displayFullscreen.value = true
     }
+
+    if (!displayFullscreen.value) {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState())
+        ) {
+            ImageContainer(
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
+                filePath = photoFilepath,
+                imageId = photoDetailState.value.saturnPhoto?.id.toString(),
+                imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
+                isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
+                isImage = photoDetailState.value.saturnPhoto?.mediaType == "image",
+                onFavoriteClick = onFavoriteClick,
+                goBack = navigateBack,
+                onFullscreenClick = onFullscreenClick
+            )
+            BottomSheetInformationContent(photoDetailState)
+        }
+    } else {
+        val filePath = if(photoDetailState.value.isHighQuality && photoDetailState.value.saturnPhoto?.mediaType == "image")
+            photoDetailState.value.saturnPhoto?.highDefinitionPath.toString()
+            else photoDetailState.value.saturnPhoto?.regularPath.toString()
+
+        Dialog(
+            onDismissRequest = { displayFullscreen.value = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            SaturnImage(
+                filePath = filePath,
+                contentDescription = photoDetailState.value.saturnPhoto?.title.toString(),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { displayFullscreen.value = false }
+            )
+        }
+
+    }
+
+
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ImageContainer(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     filePath: String,
     imageId: String,
     imageDescription: String,
     isFavorite: Boolean,
+    isImage: Boolean,
     goBack: () -> Unit,
-    onFavoriteClick: () -> Unit
+    onFavoriteClick: () -> Unit,
+    onFullscreenClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    val imageRequest = remember(filePath) {
-        ImageRequest.Builder(context)
-            .dispatcher(Dispatchers.IO)
-            .data(context.getPrivateFile(filePath))
-            .memoryCacheKey(filePath)
-            .diskCacheKey(filePath)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .size(Size.ORIGINAL)
-            .build()
-    }
-    val asyncPainter = rememberAsyncImagePainter(imageRequest)
     Box{
-        Image(
-            painter = asyncPainter,
-            contentDescription = imageDescription,
-            contentScale = ContentScale.FillWidth,
-            modifier = Modifier.fillMaxWidth()
-        )
+        with(sharedTransitionScope) {
+            SaturnImage(
+                filePath = filePath,
+                contentDescription = imageDescription,
+                contentScale = ContentScale.FillWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sharedElement(
+                        sharedTransitionScope.rememberSharedContentState(key = "image-$imageId"),
+                        animatedVisibilityScope = animatedContentScope
+                    )
+            )
+        }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
@@ -179,16 +213,18 @@ fun ImageContainer(
                     }
                 ) { onFavoriteClick() }
                 Spacer(modifier = Modifier.height(8.dp))
-                FloatingTransparentButton(
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_whole_screen),
-                            modifier = Modifier.padding(8.dp),
-                            contentDescription = DetailsScreen.getFavoriteButton(),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                ) { }
+                if (isImage) {
+                    FloatingTransparentButton(
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_whole_screen),
+                                modifier = Modifier.padding(8.dp),
+                                contentDescription = DetailsScreen.getFavoriteButton(),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    ) { onFullscreenClick() }
+                }
             }
         }
     }
@@ -215,7 +251,7 @@ fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
             selectedId = photoDetailState.value.saturnPhoto?.id ?: 0,
             title = photoDetailState.value.saturnPhoto?.title.toString(),
             displayDate = photoDetailState.value.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString().toString(),
-            authors = photoDetailState.value.saturnPhoto?.authors,
+            authors = photoDetailState.value.saturnPhoto?.authors?.replace("\n","").toString(),
             isVideo = photoDetailState.value.saturnPhoto?.mediaType.toString() == "video",
             openVideo,
             openWebsite
@@ -374,19 +410,22 @@ fun InformationRow(
 @Preview()
 @Composable
 fun FullPictureViewPreview() {
-    SaturnTheme(
-        isDarkTheme = true
-    ) {
-        Scaffold {
-            SharedTransitionLayout {
+    SharedTransitionLayout {
+        SaturnTheme(
+            isDarkTheme = true
+        ) {
+            Scaffold {
+                /*
                 FullPictureViewScreen(
                     photoDetailStateFlow = MutableStateFlow(PhotoDetailState()),
+                    this@SharedTransitionLayout,
+                    this@composable,
                     onFavoriteClick = {},
                     navigateBack = {}
                 )
+                */
+                it
             }
-
-            it
         }
     }
 }

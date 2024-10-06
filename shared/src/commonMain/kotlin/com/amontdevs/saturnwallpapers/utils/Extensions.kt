@@ -10,6 +10,11 @@ fun Instant.toDisplayableString() : String {
     return formattedDate[0].uppercase() + formattedDate.substring(1)
 }
 
+fun Instant.toShortDisplayableString() : String {
+    val formattedDate = this.formatDate("dd/MM/yyyy")
+    return formattedDate[0].uppercase() + formattedDate.substring(1)
+}
+
 fun Instant.toAPODUrl(): String {
     val date = this.formatDate("yyMMdd")
     return "https://apod.nasa.gov/apod/ap$date.html"
