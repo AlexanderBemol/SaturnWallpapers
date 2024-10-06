@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -54,6 +55,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -64,6 +67,7 @@ import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.components.ActionChip
 import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentButton
+import com.amontdevs.saturnwallpapers.android.ui.components.SaturnImage
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
@@ -104,19 +108,46 @@ fun FullPictureViewScreen(
     val photoFilepath = if(photoDetailState.value.isHighQuality && photoDetailState.value.saturnPhoto?.mediaType == "image")
         photoDetailState.value.saturnPhoto?.highDefinitionPath.toString()
         else photoDetailState.value.saturnPhoto?.regularPath.toString()
+    val displayFullscreen = remember { mutableStateOf(false) }
+    val onFullscreenClick = {
+        displayFullscreen.value = true
+    }
 
-    Column(
-        modifier = Modifier.verticalScroll(rememberScrollState())
-    ) {
-        ImageContainer(
-            filePath = photoFilepath,
-            imageId = photoDetailState.value.saturnPhoto?.id.toString(),
-            imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
-            isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
-            onFavoriteClick = onFavoriteClick,
-            goBack = navigateBack
-        )
-        BottomSheetInformationContent(photoDetailState)
+    if (!displayFullscreen.value) {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState())
+        ) {
+            ImageContainer(
+                filePath = photoFilepath,
+                imageId = photoDetailState.value.saturnPhoto?.id.toString(),
+                imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
+                isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
+                onFavoriteClick = onFavoriteClick,
+                goBack = navigateBack,
+                onFullscreenClick = onFullscreenClick
+            )
+            BottomSheetInformationContent(photoDetailState)
+        }
+    } else {
+        val filePath = if(photoDetailState.value.isHighQuality && photoDetailState.value.saturnPhoto?.mediaType == "image")
+            photoDetailState.value.saturnPhoto?.highDefinitionPath.toString()
+            else photoDetailState.value.saturnPhoto?.regularPath.toString()
+
+        Dialog(
+            onDismissRequest = { displayFullscreen.value = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            SaturnImage(
+                filePath = filePath,
+                contentDescription = photoDetailState.value.saturnPhoto?.title.toString(),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { displayFullscreen.value = false }
+            )
+        }
     }
 }
 
@@ -128,24 +159,12 @@ fun ImageContainer(
     imageDescription: String,
     isFavorite: Boolean,
     goBack: () -> Unit,
-    onFavoriteClick: () -> Unit
+    onFavoriteClick: () -> Unit,
+    onFullscreenClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    val imageRequest = remember(filePath) {
-        ImageRequest.Builder(context)
-            .dispatcher(Dispatchers.IO)
-            .data(context.getPrivateFile(filePath))
-            .memoryCacheKey(filePath)
-            .diskCacheKey(filePath)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .diskCachePolicy(CachePolicy.ENABLED)
-            .size(Size.ORIGINAL)
-            .build()
-    }
-    val asyncPainter = rememberAsyncImagePainter(imageRequest)
     Box{
-        Image(
-            painter = asyncPainter,
+        SaturnImage(
+            filePath = filePath,
             contentDescription = imageDescription,
             contentScale = ContentScale.FillWidth,
             modifier = Modifier.fillMaxWidth()
@@ -188,7 +207,7 @@ fun ImageContainer(
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                ) { }
+                ) { onFullscreenClick() }
             }
         }
     }
