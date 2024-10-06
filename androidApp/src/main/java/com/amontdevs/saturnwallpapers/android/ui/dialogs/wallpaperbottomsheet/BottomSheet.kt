@@ -69,7 +69,7 @@ fun BottomSheetOptions(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        windowInsets = BottomSheetDefaults.windowInsets
+        contentWindowInsets = {BottomSheetDefaults.windowInsets}
     ) {
         BottomSheetContent(
             wallpaperBottomSheetStateFlow = wallpaperBottomSheetStateFlow,
