@@ -61,8 +61,6 @@ import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.android.ui.components.ActionChip
 import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentButton
 import com.amontdevs.saturnwallpapers.android.ui.components.SaturnImage
-import com.amontdevs.saturnwallpapers.android.ui.components.customScaleIn
-import com.amontdevs.saturnwallpapers.android.ui.components.fadeInScaleIn
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
@@ -113,22 +111,24 @@ fun FullPictureViewScreen(
     }
 
     if (!displayFullscreen.value) {
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState())
-        ) {
-            ImageContainer(
-                sharedTransitionScope = sharedTransitionScope,
-                animatedContentScope = animatedContentScope,
-                filePath = photoFilepath,
-                imageId = photoDetailState.value.saturnPhoto?.id.toString(),
-                imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
-                isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
-                isImage = photoDetailState.value.saturnPhoto?.mediaType == "image",
-                onFavoriteClick = onFavoriteClick,
-                goBack = navigateBack,
-                onFullscreenClick = onFullscreenClick
-            )
-            BottomSheetInformationContent(photoDetailState)
+        if (photoDetailState.value.saturnPhoto != null) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                ImageContainer(
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope,
+                    filePath = photoFilepath,
+                    imageId = photoDetailState.value.saturnPhoto?.id.toString(),
+                    imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
+                    isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
+                    isImage = photoDetailState.value.saturnPhoto?.mediaType == "image",
+                    onFavoriteClick = onFavoriteClick,
+                    goBack = navigateBack,
+                    onFullscreenClick = onFullscreenClick
+                )
+                BottomSheetInformationContent(photoDetailState)
+            }
         }
     } else {
         val filePath = if(photoDetailState.value.isHighQuality && photoDetailState.value.saturnPhoto?.mediaType == "image")
