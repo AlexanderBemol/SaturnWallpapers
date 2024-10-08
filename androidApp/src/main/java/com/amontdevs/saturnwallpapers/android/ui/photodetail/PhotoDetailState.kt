@@ -1,8 +1,8 @@
 package com.amontdevs.saturnwallpapers.android.ui.photodetail
 
-import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 
 data class PhotoDetailState(
-    val saturnPhoto: SaturnPhoto? = null,
+    val saturnPhoto: SaturnPhotoWithMedia? = null,
     val isHighQuality: Boolean = false
 )

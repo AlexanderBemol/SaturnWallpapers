@@ -18,7 +18,6 @@ fun buildRoomDatabase(context: Context): SaturnDatabase {
         .setQueryCoroutineContext(Dispatchers.IO)
         .build()
 }
-
 actual fun getPlatformModules() = module {
         single { buildRoomDatabase(get()) }
 }

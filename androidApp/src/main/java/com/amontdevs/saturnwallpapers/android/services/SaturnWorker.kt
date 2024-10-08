@@ -8,8 +8,12 @@ import com.amontdevs.saturnwallpapers.android.system.IAndroidWallpaperSetter
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMedia
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.model.SaturnSettings
+import com.amontdevs.saturnwallpapers.model.getMedia
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import com.amontdevs.saturnwallpapers.repository.ISettingsRepository
 import com.amontdevs.saturnwallpapers.source.IFileManager
@@ -34,15 +38,20 @@ class SaturnWorker(
             refreshPhotos()
             val settings = getSettings()
             val todaySaturnPhoto = getTodayWallpaper()
-            val saturnPhotoToSet = if (todaySaturnPhoto.mediaType == "image") todaySaturnPhoto
-                else getDefaultPhoto(settings.defaultSaturnPhoto)
+            val saturnPhotoToSet = if (todaySaturnPhoto.saturnPhoto.isVideo) getDefaultPhoto(settings.defaultSaturnPhoto)
+                else todaySaturnPhoto
 
-            val filename = if (settings.mediaQuality == MediaQuality.HIGH) saturnPhotoToSet.highDefinitionPath
-                else saturnPhotoToSet.regularPath
-
-            val photoByteArray = getPhotoByteArray(filename)
-            androidWallpaperSetter.setWallpaper(settings.wallpaperScreen, photoByteArray)
-            Result.success()
+            val media = saturnPhotoToSet.getMedia(
+                when(settings.mediaQuality) {
+                    MediaQuality.NORMAL -> SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+                    MediaQuality.HIGH -> SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+                }
+            )
+            if (media != null) {
+                val photoByteArray = getPhotoByteArray(media.filepath)
+                androidWallpaperSetter.setWallpaper(settings.wallpaperScreen, photoByteArray)
+                Result.success()
+            } else Result.success()
         } catch (e: Exception) {
             Log.e("SaturnWorker", e.message, e)
             Result.retry()
@@ -69,7 +78,7 @@ class SaturnWorker(
         }
     }
 
-    private suspend fun  getTodayWallpaper(): SaturnPhoto {
+    private suspend fun getTodayWallpaper(): SaturnPhotoWithMedia {
         return when(val saturnPhotoResult = saturnPhotosRepository.getSaturnPhoto(timeProvider.getCurrentTime())) {
             is SaturnResult.Error -> {
                 throw saturnPhotoResult.e
@@ -91,15 +100,15 @@ class SaturnWorker(
         }
     }
 
-    private suspend fun getDefaultPhoto(defaultPhoto: DefaultSaturnPhoto): SaturnPhoto {
+    private suspend fun getDefaultPhoto(defaultPhoto: DefaultSaturnPhoto): SaturnPhotoWithMedia {
         return when(val saturnPhotoResult = saturnPhotosRepository.getAllSaturnPhotos()) {
             is SaturnResult.Error -> {
                 throw saturnPhotoResult.e
             }
             is SaturnResult.Success -> {
-                val validPhotos = saturnPhotoResult.data.filter {it.mediaType == "image"}
+                val validPhotos = saturnPhotoResult.data.filter {!it.saturnPhoto.isVideo}
                 if (defaultPhoto == DefaultSaturnPhoto.RANDOM) validPhotos.random()
-                else validPhotos.filter { it.isFavorite }.random()
+                else validPhotos.filter { it.saturnPhoto.isFavorite }.random()
             }
         }
     }

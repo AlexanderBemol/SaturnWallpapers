@@ -1,9 +1,13 @@
 package com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet
 
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 
 data class WallpaperBottomSheetState(
-    val saturnPhoto: SaturnPhoto = SaturnPhoto(),
+    val saturnPhoto: SaturnPhotoWithMedia = SaturnPhotoWithMedia(
+        SaturnPhoto(),
+        listOf()
+    ),
     val isSetWallpaperLockScreenLoading: Boolean = false,
     val isSetWallpaperHomeScreenLoading: Boolean = false,
     val isSetWallpaperBothLoading: Boolean = false,

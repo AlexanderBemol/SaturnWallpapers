@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import coil.disk.DiskCache
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.size.Size
@@ -50,6 +51,10 @@ import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
 import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMedia
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
+import com.amontdevs.saturnwallpapers.model.getMedia
 import com.amontdevs.saturnwallpapers.resources.Home
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
@@ -64,8 +69,8 @@ fun HomeScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope
 ) {
-    val openPicture = { photoId: String -> navController
-        .navigate(Navigation.Details.title + "/$photoId")
+    val openPicture = { photoId: String ->
+        navController.navigate(Navigation.Details.title + "/$photoId")
     }
     val navigateToGalleryFavorites = {
         navController.navigate(Navigation.Gallery.title + "?isFavoriteState=true")
@@ -100,7 +105,7 @@ fun HomeScreen(
                 homeState.value,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope
-            ) { openPicture(homeState.value.saturnPhoto?.id.toString()) }
+            ) { openPicture(homeState.value.saturnPhoto?.saturnPhoto?.id.toString()) }
             Spacer(modifier = Modifier.height(16.dp))
             FavoritePhotos(
                 favoritesPhotos = homeState.value.favoritePhotos,
@@ -127,35 +132,43 @@ fun TodayData(
         textAlign = TextAlign.Start
     )
     Text(
-        text = homeState.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString() ?: "",
+        text = homeState.saturnPhoto?.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString() ?: "",
         style = MaterialTheme.typography.titleMedium
     )
     Spacer(modifier = Modifier.height(16.dp))
     with(sharedTransitionScope) {
         homeState.saturnPhoto?.let { saturnPhoto ->
-            SaturnImage(
-                filePath = saturnPhoto.regularPath,
-                contentDescription = saturnPhoto.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(260.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .sharedElement(
-                        sharedTransitionScope.rememberSharedContentState(key = "image-${saturnPhoto.id}"),
+            val saturnMedia = saturnPhoto.getMedia(SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE)
+            if (saturnMedia != null) {
+                SaturnImage(
+                    filePath = saturnMedia.filepath,
+                    contentDescription = saturnPhoto.saturnPhoto.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .sharedElement(
+                            sharedTransitionScope.rememberSharedContentState(
+                                key = "home-today-image-${saturnPhoto.saturnPhoto.id}"
+                            ),
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                        .clickable { onClick() }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = saturnPhoto.saturnPhoto.title,
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.sharedElement(
+                        sharedTransitionScope.rememberSharedContentState(
+                            key = "title-${saturnPhoto.saturnPhoto.id}"
+                        ),
                         animatedVisibilityScope = animatedContentScope
                     )
-                    .clickable { onClick() }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = saturnPhoto.title,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.sharedElement(
-                    sharedTransitionScope.rememberSharedContentState(key = "title-${saturnPhoto.id}"),
-                    animatedVisibilityScope = animatedContentScope
                 )
-            )
+            }
+
         }
     }
 }
@@ -163,7 +176,7 @@ fun TodayData(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun FavoritePhotos(
-    favoritesPhotos: List<SaturnPhoto>,
+    favoritesPhotos: List<SaturnPhotoWithMedia>,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onListClick: () -> Unit,
@@ -196,11 +209,14 @@ fun FavoritePhotos(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(favoritesPhotos){
-                FavoriteItem(
-                    saturnPhoto = it,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope
-                ) { onItemClick(it.id.toString()) }
+                it.getMedia(SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE)?.let { media ->
+                    FavoriteItem(
+                        saturnPhoto = it.saturnPhoto,
+                        saturnPhotoMedia = media,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope
+                    ) { onItemClick(it.saturnPhoto.id.toString()) }
+                }
             }
         }
     }
@@ -211,6 +227,7 @@ fun FavoritePhotos(
 @Composable
 fun FavoriteItem(
     saturnPhoto: SaturnPhoto,
+    saturnPhotoMedia: SaturnPhotoMedia,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onClick: () -> Unit
@@ -218,7 +235,7 @@ fun FavoriteItem(
     Column{
         with(sharedTransitionScope) {
             SaturnImage(
-                filePath = saturnPhoto.regularPath,
+                filePath = saturnPhotoMedia.filepath,
                 contentDescription = saturnPhoto.title,
                 contentScale = ContentScale.FillHeight,
                 modifier = Modifier

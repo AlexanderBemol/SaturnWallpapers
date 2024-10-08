@@ -71,6 +71,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
+dependencies {
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.contentpager)
+}
 
 room {
     schemaDirectory("$projectDir/schemas")

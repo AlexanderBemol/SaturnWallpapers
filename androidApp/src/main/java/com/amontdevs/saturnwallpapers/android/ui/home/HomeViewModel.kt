@@ -45,7 +45,9 @@ class HomeViewModel(
             when (val result = saturnPhotosRepository.getAllSaturnPhotos()) {
                 is SaturnResult.Success -> {
                     _homeState.value = _homeState.value.copy(
-                        favoritePhotos = result.data.filter { it.isFavorite }.sortedByDescending { it.timestamp }
+                        favoritePhotos = result.data
+                            .filter { it.saturnPhoto.isFavorite }
+                            .sortedByDescending { it.saturnPhoto.timestamp }
                     )
                     Log.d("HomeViewModel", "Updated favorites photos")
                 }

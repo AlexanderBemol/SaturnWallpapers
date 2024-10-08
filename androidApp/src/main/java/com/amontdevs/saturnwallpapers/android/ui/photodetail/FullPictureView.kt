@@ -63,13 +63,12 @@ import com.amontdevs.saturnwallpapers.android.ui.components.FloatingTransparentB
 import com.amontdevs.saturnwallpapers.android.ui.components.SaturnImage
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
-import com.amontdevs.saturnwallpapers.android.utils.getPrivateFile
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
+import com.amontdevs.saturnwallpapers.model.getMedia
 import com.amontdevs.saturnwallpapers.resources.DetailsScreen
 import com.amontdevs.saturnwallpapers.utils.toAPODUrl
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.getKoin
 import org.koin.core.parameter.parametersOf
@@ -104,11 +103,15 @@ fun FullPictureViewScreen(
     navigateBack: () -> Unit,
 ) {
     val photoDetailState = photoDetailStateFlow.collectAsState()
-    val photoFilepath = photoDetailState.value.saturnPhoto?.regularPath.toString()
     val displayFullscreen = remember { mutableStateOf(false) }
     val onFullscreenClick = {
         displayFullscreen.value = true
     }
+
+    val regularMedia = photoDetailState.value.saturnPhoto?.getMedia(
+        if(photoDetailState.value.saturnPhoto!!.saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
+        else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+    )
 
     if (!displayFullscreen.value) {
         if (photoDetailState.value.saturnPhoto != null) {
@@ -118,32 +121,30 @@ fun FullPictureViewScreen(
                 ImageContainer(
                     sharedTransitionScope = sharedTransitionScope,
                     animatedContentScope = animatedContentScope,
-                    filePath = photoFilepath,
-                    imageId = photoDetailState.value.saturnPhoto?.id.toString(),
-                    imageDescription = photoDetailState.value.saturnPhoto?.title.toString(),
-                    isFavorite = photoDetailState.value.saturnPhoto?.isFavorite == true,
-                    isImage = photoDetailState.value.saturnPhoto?.mediaType == "image",
+                    filePath = regularMedia?.filepath.toString(),
+                    imageId = photoDetailState.value.saturnPhoto?.saturnPhoto?.id.toString(),
+                    imageDescription = photoDetailState.value.saturnPhoto?.saturnPhoto?.title.toString(),
+                    isFavorite = photoDetailState.value.saturnPhoto?.saturnPhoto?.isFavorite == true,
+                    isImage = photoDetailState.value.saturnPhoto?.saturnPhoto?.isVideo == false,
                     onFavoriteClick = onFavoriteClick,
                     goBack = navigateBack,
                     onFullscreenClick = onFullscreenClick
                 )
-                BottomSheetInformationContent(photoDetailState)
+                BottomInformationContent(photoDetailState)
             }
         }
     } else {
-        val filePath = if(photoDetailState.value.isHighQuality && photoDetailState.value.saturnPhoto?.mediaType == "image")
-            photoDetailState.value.saturnPhoto?.highDefinitionPath.toString()
-            else photoDetailState.value.saturnPhoto?.regularPath.toString()
-
         Dialog(
             onDismissRequest = { displayFullscreen.value = false },
             properties = DialogProperties(
                 usePlatformDefaultWidth = false
             )
         ) {
+            val filePath = photoDetailState.value.saturnPhoto
+                ?.getMedia(SaturnPhotoMediaType.HIGH_QUALITY_IMAGE) ?: regularMedia
             SaturnImage(
-                filePath = filePath,
-                contentDescription = photoDetailState.value.saturnPhoto?.title.toString(),
+                filePath = filePath?.filepath.toString(),
+                contentDescription = photoDetailState.value.saturnPhoto?.saturnPhoto?.title.toString(),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
@@ -231,28 +232,28 @@ fun ImageContainer(
 }
 
 @Composable
-fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
+fun BottomInformationContent(photoDetailState: State<PhotoDetailState>) {
     val context = LocalContext.current
     val openVideo = {
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(photoDetailState.value.saturnPhoto?.videoUrl.toString())
+        intent.data = Uri.parse(photoDetailState.value.saturnPhoto?.saturnPhoto?.videoUrl.toString())
         context.startActivity(intent)
     }
     val openWebsite = {
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(photoDetailState.value.saturnPhoto?.timestamp?.toInstant()?.toAPODUrl())
+        intent.data = Uri.parse(photoDetailState.value.saturnPhoto?.saturnPhoto?.timestamp?.toInstant()?.toAPODUrl())
         context.startActivity(intent)
     }
 
     Column(
         Modifier.padding(horizontal = 16.dp)
     ) {
-        BottomSheetHeader(
-            selectedId = photoDetailState.value.saturnPhoto?.id ?: 0,
-            title = photoDetailState.value.saturnPhoto?.title.toString(),
-            displayDate = photoDetailState.value.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString().toString(),
-            authors = photoDetailState.value.saturnPhoto?.authors?.replace("\n","").toString(),
-            isVideo = photoDetailState.value.saturnPhoto?.mediaType.toString() == "video",
+        BottomHeader(
+            selectedId = photoDetailState.value.saturnPhoto?.saturnPhoto?.id ?: 0,
+            title = photoDetailState.value.saturnPhoto?.saturnPhoto?.title.toString(),
+            displayDate = photoDetailState.value.saturnPhoto?.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString().toString(),
+            authors = photoDetailState.value.saturnPhoto?.saturnPhoto?.authors?.replace("\n","").toString(),
+            isVideo = photoDetailState.value.saturnPhoto?.saturnPhoto?.isVideo == false,
             openVideo,
             openWebsite
         )
@@ -260,7 +261,7 @@ fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
         HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
         DescriptionContent(
-            description = photoDetailState.value.saturnPhoto?.description.toString()
+            description = photoDetailState.value.saturnPhoto?.saturnPhoto?.description.toString()
         )
         Spacer(modifier = Modifier.height(8.dp))
     }
@@ -268,8 +269,8 @@ fun BottomSheetInformationContent(photoDetailState: State<PhotoDetailState>) {
 
 
 @Composable
-fun BottomSheetHeader(
-    selectedId: Int,
+fun BottomHeader(
+    selectedId: Long,
     title: String,
     displayDate: String,
     authors: String?,

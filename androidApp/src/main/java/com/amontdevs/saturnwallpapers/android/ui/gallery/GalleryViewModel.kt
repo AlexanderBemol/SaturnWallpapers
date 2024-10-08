@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amontdevs.saturnwallpapers.model.RefreshOperationStatus
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,7 @@ class GalleryViewModel(
     private val filterByFav: Boolean = false,
 ): ViewModel() {
 
-    private var wholeSaturnList = mutableListOf<SaturnPhoto>()
+    private var wholeSaturnList = mutableListOf<SaturnPhotoWithMedia>()
     private val _galleryState = MutableStateFlow(GalleryState())
     val galleryState: StateFlow<GalleryState>  = _galleryState
 
@@ -30,7 +31,7 @@ class GalleryViewModel(
             when(val result = saturnPhotosRepository.getAllSaturnPhotos()) {
                 is SaturnResult.Success -> {
                     Log.d("GalleryViewModel", result.data.toString())
-                    wholeSaturnList = result.data.sortedByDescending { it.timestamp }.toMutableList()
+                    wholeSaturnList = result.data.sortedByDescending { it.saturnPhoto.timestamp }.toMutableList()
                     if(filterByFav) {
                         _galleryState.value = _galleryState.value.copy(
                             areFiltersVisible = true,
@@ -69,9 +70,9 @@ class GalleryViewModel(
             viewModelScope.launch {
                 when (val result = saturnPhotosRepository.populateAndGetPastDays(2u)){
                     is SaturnResult.Success -> {
-                        wholeSaturnList += result.data
-                        _galleryState.value = _galleryState.value.copy(isFetchingPhotos = false)
-                        sortAndFilterList()
+                        //wholeSaturnList += result.data
+                        //_galleryState.value = _galleryState.value.copy(isFetchingPhotos = false)
+                        //sortAndFilterList()
                     }
                     is SaturnResult.Error -> {
                         _galleryState.value = _galleryState.value.copy(isFetchingPhotos = false)
@@ -86,9 +87,9 @@ class GalleryViewModel(
 
     private fun sortAndFilterList(){
         val filteredList = if(!_galleryState.value.isFavoriteSelected) wholeSaturnList
-        else wholeSaturnList.filter { it.isFavorite }
-        val orderedList = if(_galleryState.value.isAscSortSelected) filteredList.sortedBy { it.timestamp }
-        else filteredList.sortedByDescending { it.timestamp }
+        else wholeSaturnList.filter { it.saturnPhoto.isFavorite }
+        val orderedList = if(_galleryState.value.isAscSortSelected) filteredList.sortedBy { it.saturnPhoto.timestamp }
+        else filteredList.sortedByDescending { it.saturnPhoto.timestamp }
 
         _galleryState.value = _galleryState.value.copy(
             saturnPhotos = orderedList,

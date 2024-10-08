@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 class PhotoDetailViewModel(
     private val saturnPhotosRepository: ISaturnPhotosRepository,
     private val settingsRepository: ISettingsRepository,
-    private val photoId: Int
+    private val photoId: Long
 ): ViewModel() {
     private val _fullViewState = MutableStateFlow(PhotoDetailState())
     val fullViewState: StateFlow<PhotoDetailState> = _fullViewState
@@ -48,9 +48,9 @@ class PhotoDetailViewModel(
 
     fun onFavoriteClick() {
         viewModelScope.launch {
-            val saturnPhoto = _fullViewState.value.saturnPhoto!!.copy().apply { isFavorite = !isFavorite }
+            val saturnPhoto = _fullViewState.value.saturnPhoto!!.copy().apply { saturnPhoto.isFavorite = !saturnPhoto.isFavorite }
             when (
-                val result = saturnPhotosRepository.updateSaturnPhoto(saturnPhoto)
+                val result = saturnPhotosRepository.updateSaturnPhoto(saturnPhoto.saturnPhoto)
             ) {
                 is SaturnResult.Success -> {
                     _fullViewState.value = fullViewState.value.copy(saturnPhoto = saturnPhoto)

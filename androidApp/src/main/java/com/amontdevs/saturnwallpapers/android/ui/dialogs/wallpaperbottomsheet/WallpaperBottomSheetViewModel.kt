@@ -7,8 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.amontdevs.saturnwallpapers.android.system.AndroidWallpaperSetter
 import com.amontdevs.saturnwallpapers.android.system.IAndroidWallpaperSetter
 import com.amontdevs.saturnwallpapers.model.MediaQuality
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.model.WallpaperScreen
+import com.amontdevs.saturnwallpapers.model.getMedia
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import com.amontdevs.saturnwallpapers.repository.ISettingsRepository
 import com.amontdevs.saturnwallpapers.repository.SaturnPhotosRepository
@@ -26,7 +28,7 @@ class WallpaperBottomSheetViewModel(
     private val fileManager: IFileManager,
     private val wallpaperSetter: IWallpaperSetter,
     private val androidWallpaperSetter: IAndroidWallpaperSetter,
-    private val photoId: Int
+    private val photoId: Long
 ) : ViewModel() {
     private val _wallpaperBottomSheetState = MutableStateFlow(WallpaperBottomSheetState())
     val wallpaperBottomSheetState: StateFlow<WallpaperBottomSheetState> = _wallpaperBottomSheetState
@@ -64,9 +66,13 @@ class WallpaperBottomSheetViewModel(
         )
         val saturnPhoto = _wallpaperBottomSheetState.value.saturnPhoto
         viewModelScope.launch {
-            val picturePath = if(quality == MediaQuality.NORMAL) saturnPhoto.regularPath
-                else saturnPhoto.highDefinitionPath
-            when (val result = fileManager.savePictureToExternalStorage(picturePath)) {
+            val media = saturnPhoto.getMedia(
+                if(quality == MediaQuality.HIGH) SaturnPhotoMediaType.HIGH_QUALITY_IMAGE
+                else if (saturnPhoto.saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
+                else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+            )
+
+            when (val result = fileManager.savePictureToExternalStorage(media?.filepath.toString())) {
                 is SaturnResult.Success -> {
                     _wallpaperBottomSheetState.value = _wallpaperBottomSheetState.value.copy(
                         isDownloadHQLoading = false,
@@ -101,8 +107,9 @@ class WallpaperBottomSheetViewModel(
             }
 
             val saturnPhoto = _wallpaperBottomSheetState.value.saturnPhoto
-            val picturePath = if(saturnPhoto.highDefinitionPath != "") saturnPhoto.highDefinitionPath
-                else saturnPhoto.regularPath
+            val picturePath = (saturnPhoto.getMedia(SaturnPhotoMediaType.HIGH_QUALITY_IMAGE)?.filepath
+                ?: saturnPhoto.getMedia(SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE)?.filepath
+                ?: saturnPhoto.getMedia(SaturnPhotoMediaType.VIDEO)?.filepath).toString()
 
             when (val result = wallpaperSetter.setWallpaper(screen, picturePath, platformSetWallpaper)){
                 is SaturnResult.Success -> {

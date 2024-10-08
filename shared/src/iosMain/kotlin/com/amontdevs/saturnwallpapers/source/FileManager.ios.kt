@@ -5,7 +5,7 @@ import io.ktor.utils.io.ByteReadChannel
 
 actual suspend fun platformSavePicture(
     bytes: ByteReadChannel,
-    date: String
+    filename: String
 ): SaturnResult<String> {
     TODO("Not yet implemented")
 }
