@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Update
 import com.amontdevs.saturnwallpapers.model.SaturnPhotoMedia
-import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 
 @Dao
 interface ISaturnPhotoMediaDao {

@@ -41,6 +41,7 @@ interface ISaturnPhotosRepository {
     suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhoto>>
     suspend fun refresh(): SaturnResult<Unit>
     suspend fun updateMediaQuality(mediaQuality: MediaQuality): SaturnResult<Unit>
+    suspend fun downloadNotDownloadedPhotos(): SaturnResult<Unit>
 }
 
 class SaturnPhotosRepository(
@@ -142,7 +143,7 @@ class SaturnPhotosRepository(
     override suspend fun refresh(): SaturnResult<Unit> {
         return try {
             //remove old data
-            //pruneOldData()
+            pruneOldData()
             //new data to download
             val lastSavedPhoto = Instant.fromEpochMilliseconds(
                 saturnPhotoDao.getAllSaturnPhotos()
@@ -159,6 +160,22 @@ class SaturnPhotosRepository(
             SaturnResult.Error(e)
         }
     }
+
+    override suspend fun downloadNotDownloadedPhotos(): SaturnResult<Unit> {
+        return try {
+            val notDownloadedPhotos = getNotDownloadedPhotos()
+            val isHQEnabled = saturnSettings.getSettings().mediaQuality == MediaQuality.HIGH
+            downloadMediaAndUpdate(notDownloadedPhotos, if(isHQEnabled) null else MediaQuality.NORMAL)
+            SaturnResult.Success(Unit)
+        } catch (e: Exception) {
+            SaturnResult.Error(e)
+        }
+    }
+
+    private suspend fun getNotDownloadedPhotos() =
+        saturnPhotoDao.getAllSaturnPhotos()
+            .filter { it.mediaList.any { media -> media.status != SaturnPhotoMediaStatus.DOWNLOADED } }
+
 
     private suspend fun pruneOldData() {
         val currentTime = timeProvider.getCurrentTime()
@@ -223,15 +240,16 @@ class SaturnPhotosRepository(
     private suspend fun downloadDaysOfData(startTime: Instant, endTime: Instant){
         val apodModelList = apodService.getPhotoOfDays(startTime.toCommonFormat(), endTime.toCommonFormat())
         val saturnPhotos = convertAndInsertApodModelList(apodModelList)
-        downloadMediaAndUpdate(MediaQuality.NORMAL, saturnPhotos)
+        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL)
     }
 
     private suspend fun convertAndInsertApodModelList(apodModelList: List<ApodModel>): List<SaturnPhotoWithMedia> {
         val saturnPhotos = apodModelList.map { it.toSaturnPhoto() }
-
         return withContext(Dispatchers.IO) {
             val insertedIds = saturnPhotoDao.insertSaturnPhoto(*saturnPhotos.toTypedArray())
+
             saturnPhotos.forEachIndexed { index, saturnPhoto ->
+                val filepath = ""
                 val media = listOfNotNull(
                     SaturnPhotoMedia(
                         saturnPhotoId = insertedIds[index],
@@ -247,7 +265,7 @@ class SaturnPhotosRepository(
                         saturnPhotoId = insertedIds[index],
                         mediaType = SaturnPhotoMediaType.HIGH_QUALITY_IMAGE,
                         url = apodModelList[index].highDefinitionUrl.toString(),
-                        filepath = "",
+                        filepath = "HQ-",
                         status = SaturnPhotoMediaStatus.NOT_DOWNLOADED_YET,
                         errorMessage = ""
                     ) else null
@@ -259,8 +277,8 @@ class SaturnPhotosRepository(
     }
 
     private suspend fun downloadMediaAndUpdate(
-        quality: MediaQuality,
-        saturnPhotosWithMedia: List<SaturnPhotoWithMedia>
+        saturnPhotosWithMedia: List<SaturnPhotoWithMedia>,
+        quality: MediaQuality? = null,
     ) {
         val mediaTypes = when (quality) {
             MediaQuality.NORMAL -> listOf(
@@ -268,6 +286,11 @@ class SaturnPhotosRepository(
                 SaturnPhotoMediaType.VIDEO
             )
             MediaQuality.HIGH -> listOf(SaturnPhotoMediaType.HIGH_QUALITY_IMAGE)
+            else -> listOf(
+                SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE,
+                SaturnPhotoMediaType.VIDEO,
+                SaturnPhotoMediaType.HIGH_QUALITY_IMAGE
+            )
         }
 
         withContext(Dispatchers.IO) {

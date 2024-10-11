@@ -53,7 +53,7 @@ class SettingsViewModel(
                 is SaturnResult.Success -> {
                     try {
                         if(newSettingsState.isDailyWallpaperActivated){
-                            WorkerHelper.setWorker(workManager)
+                            WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DAILY_WORKER)
                         } else {
                             WorkerHelper.stopWorker(workManager)
                         }
@@ -148,20 +148,11 @@ class SettingsViewModel(
 
     fun confirmQualityChangeOperation() {
         viewModelScope.launch {
-            when(val result = saturnPhotosRepository.updateMediaQuality(settingsToConfirm.mediaQuality)){
-                is SaturnResult.Success -> {
-                    _settingsState.value = _settingsState.value.copy(
-                        confirm = ConfirmState(display = false)
-                    )
-                    saveDropDownOption(settingsToConfirm)
-                }
-                is SaturnResult.Error -> {
-                    Log.e("SettingsViewModel", "Error updating media quality: ${result.e}")
-                    _settingsState.value = _settingsState.value.copy(
-                        confirm = ConfirmState(display = false)
-                    )
-                }
-            }
+            WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)
+            _settingsState.value = _settingsState.value.copy(
+                confirm = ConfirmState(display = false)
+            )
+            saveDropDownOption(settingsToConfirm)
         }
     }
 

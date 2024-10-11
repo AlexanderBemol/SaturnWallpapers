@@ -59,7 +59,10 @@ class HomeViewModel(
         viewModelScope.launch {
             when (val result = settingsRepository.getSettings()) {
                 is SaturnResult.Success -> {
-                    if (result.data.isDailyWallpaperActivated) WorkerHelper.setWorker(workManager)
+                    if (result.data.isDailyWallpaperActivated) {
+                        WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DAILY_WORKER)
+                    }
+                    WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)
                 }
                 is SaturnResult.Error -> {
                     Log.d("HomeViewModel", "Error: ${result.e}")

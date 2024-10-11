@@ -7,8 +7,6 @@ import androidx.work.WorkerParameters
 import com.amontdevs.saturnwallpapers.android.system.IAndroidWallpaperSetter
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
-import com.amontdevs.saturnwallpapers.model.SaturnPhoto
-import com.amontdevs.saturnwallpapers.model.SaturnPhotoMedia
 import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
 import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 import com.amontdevs.saturnwallpapers.model.SaturnResult
@@ -23,7 +21,7 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class SaturnWorker(
+class SaturnDailyWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ): CoroutineWorker(appContext, workerParams), KoinComponent {
