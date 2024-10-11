@@ -267,7 +267,7 @@ fun GalleryGrid(
                 Log.d("Gallery", "Opening: ${saturnPhoto.saturnPhoto.id}")
             }
         }
-        repeat(2){
+        repeat(4){
             item {
                 if (isFetchingPhotos) {
                     CircularProgressIndicator(

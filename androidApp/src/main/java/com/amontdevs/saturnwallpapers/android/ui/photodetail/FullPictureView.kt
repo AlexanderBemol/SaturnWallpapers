@@ -253,7 +253,7 @@ fun BottomInformationContent(photoDetailState: State<PhotoDetailState>) {
             title = photoDetailState.value.saturnPhoto?.saturnPhoto?.title.toString(),
             displayDate = photoDetailState.value.saturnPhoto?.saturnPhoto?.timestamp?.toInstant()?.toDisplayableString().toString(),
             authors = photoDetailState.value.saturnPhoto?.saturnPhoto?.authors?.replace("\n","").toString(),
-            isVideo = photoDetailState.value.saturnPhoto?.saturnPhoto?.isVideo == false,
+            isVideo = photoDetailState.value.saturnPhoto?.saturnPhoto?.isVideo == true,
             openVideo,
             openWebsite
         )

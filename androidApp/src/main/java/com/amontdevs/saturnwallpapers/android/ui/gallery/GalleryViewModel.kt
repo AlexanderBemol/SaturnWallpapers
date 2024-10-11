@@ -68,11 +68,11 @@ class GalleryViewModel(
             && !_galleryState.value.isAscSortSelected && !_galleryState.value.isFavoriteSelected) {
             _galleryState.value = _galleryState.value.copy(isFetchingPhotos = true)
             viewModelScope.launch {
-                when (val result = saturnPhotosRepository.populateAndGetPastDays(2u)){
+                when (val result = saturnPhotosRepository.populateAndGetPastDays(4u)){
                     is SaturnResult.Success -> {
-                        //wholeSaturnList += result.data
-                        //_galleryState.value = _galleryState.value.copy(isFetchingPhotos = false)
-                        //sortAndFilterList()
+                        wholeSaturnList += result.data
+                        _galleryState.value = _galleryState.value.copy(isFetchingPhotos = false)
+                        sortAndFilterList()
                     }
                     is SaturnResult.Error -> {
                         _galleryState.value = _galleryState.value.copy(isFetchingPhotos = false)

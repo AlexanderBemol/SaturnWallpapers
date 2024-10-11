@@ -38,7 +38,7 @@ interface ISaturnPhotosRepository {
     suspend fun getSaturnPhoto(id: Long): SaturnResult<SaturnPhotoWithMedia>
     suspend fun getAllSaturnPhotos(): SaturnResult<List<SaturnPhotoWithMedia>>
     suspend fun updateSaturnPhoto(saturnPhoto: SaturnPhoto): SaturnResult<Unit>
-    suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhoto>>
+    suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhotoWithMedia>>
     suspend fun refresh(): SaturnResult<Unit>
     suspend fun updateMediaQuality(mediaQuality: MediaQuality): SaturnResult<Unit>
     suspend fun downloadNotDownloadedPhotos(): SaturnResult<Unit>
@@ -118,7 +118,7 @@ class SaturnPhotosRepository(
         }
     }
 
-    override suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhoto>> {
+    override suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhotoWithMedia>> {
         return try {
             _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress)
             val olderSavedPhoto = Instant.fromEpochMilliseconds(
@@ -130,8 +130,8 @@ class SaturnPhotosRepository(
             val newStartTime = olderSavedPhoto.minus(daysOfData.toInt().days)
             val newEndTime = olderSavedPhoto.minus(1.days)
             downloadDaysOfData(newStartTime, newEndTime)
-            val listOfSaturnPhotos = saturnPhotoDao.
-            getSaturnPhotos(newStartTime.toEpochMilliseconds(), newEndTime.toEpochMilliseconds())
+            val listOfSaturnPhotos = saturnPhotoDao
+                .getSaturnPhotos(newStartTime.toEpochMilliseconds(), newEndTime.toEpochMilliseconds())
             _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished)
             SaturnResult.Success(listOfSaturnPhotos)
         } catch (e: Exception) {
@@ -295,8 +295,13 @@ class SaturnPhotosRepository(
 
         withContext(Dispatchers.IO) {
             saturnPhotosWithMedia.forEach { saturnPhotoWithMedia ->
-                val mediaToDownload = saturnPhotoWithMedia.mediaList.firstOrNull { mediaTypes.contains(it.mediaType) }
-                mediaToDownload?.downloadMedia(saturnPhotoWithMedia.saturnPhoto)
+                val mediaToDownload = saturnPhotoWithMedia.mediaList
+                    .filter { mediaTypes.contains(it.mediaType)
+                            && it.status == SaturnPhotoMediaStatus.NOT_DOWNLOADED_YET
+                    }
+                mediaToDownload.forEach {
+                    it.downloadMedia(saturnPhotoWithMedia.saturnPhoto)
+                }
                 //update progress
                 _operationProgress.emit(
                     (saturnPhotosWithMedia.indexOf(saturnPhotoWithMedia) + 1) * 100 / saturnPhotosWithMedia.size

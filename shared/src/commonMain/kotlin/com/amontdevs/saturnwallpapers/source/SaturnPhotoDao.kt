@@ -19,7 +19,7 @@ interface ISaturnPhotoDao {
     suspend fun getAllSaturnPhotos(): List<SaturnPhotoWithMedia>
 
     @Query("SELECT * FROM SaturnPhoto WHERE timestamp >= :startTime AND timestamp <= :endTime")
-    suspend fun getSaturnPhotos(startTime: Long, endTime: Long): List<SaturnPhoto>
+    suspend fun getSaturnPhotos(startTime: Long, endTime: Long): List<SaturnPhotoWithMedia>
 
     @Query("SELECT * FROM SaturnPhoto WHERE timestamp = :timestamp")
     suspend fun getSaturnPhotoByTimestamp(timestamp: Long): SaturnPhotoWithMedia
