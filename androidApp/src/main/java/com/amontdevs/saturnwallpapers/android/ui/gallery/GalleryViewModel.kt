@@ -24,11 +24,7 @@ class GalleryViewModel(
     private val _galleryState = MutableStateFlow(GalleryState())
     val galleryState: StateFlow<GalleryState>  = _galleryState
 
-    init {
-        loadData()
-    }
-
-    private fun loadData() {
+    fun loadData() {
         viewModelScope.launch {
             _galleryState.value = _galleryState.value.copy(isLoaded = false)
             when(val result = saturnPhotosRepository.getAllSaturnPhotos()) {

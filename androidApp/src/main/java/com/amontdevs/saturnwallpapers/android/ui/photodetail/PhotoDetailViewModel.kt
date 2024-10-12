@@ -19,7 +19,11 @@ class PhotoDetailViewModel(
     private val _fullViewState = MutableStateFlow(PhotoDetailState())
     val fullViewState: StateFlow<PhotoDetailState> = _fullViewState
 
-    fun loadData() {
+    init {
+        loadData()
+    }
+
+    private fun loadData() {
         viewModelScope.launch {
             when (val result = saturnPhotosRepository.getSaturnPhoto(photoId)) {
                 is SaturnResult.Success -> {
@@ -32,28 +36,19 @@ class PhotoDetailViewModel(
                 }
             }
         }
-        viewModelScope.launch {
-            when (val result = settingsRepository.getSettings()) {
-                is SaturnResult.Success -> {
-                    _fullViewState.value = _fullViewState.value.copy(
-                        isHighQuality = result.data.mediaQuality == MediaQuality.HIGH
-                    )
-                }
-                is SaturnResult.Error -> {
-                    Log.d("PhotoDetailViewModel", "Error: ${result.e}")
-                }
-            }
-        }
     }
 
     fun onFavoriteClick() {
         viewModelScope.launch {
-            val saturnPhoto = _fullViewState.value.saturnPhoto!!.copy().apply { saturnPhoto.isFavorite = !saturnPhoto.isFavorite }
+            val saturnPhotoWithMedia = _fullViewState.value
+                .saturnPhoto!!.copy()
+                .apply { saturnPhoto = saturnPhoto.copy(isFavorite = !saturnPhoto.isFavorite) }
             when (
-                val result = saturnPhotosRepository.updateSaturnPhoto(saturnPhoto.saturnPhoto)
+                val result = saturnPhotosRepository.updateSaturnPhoto(saturnPhotoWithMedia.saturnPhoto)
             ) {
                 is SaturnResult.Success -> {
-                    _fullViewState.value = fullViewState.value.copy(saturnPhoto = saturnPhoto)
+                    _fullViewState.value =
+                        _fullViewState.value.copy(saturnPhoto = saturnPhotoWithMedia)
                 }
                 is SaturnResult.Error -> {
                     Log.d("PhotoDetailViewModel", "Error: ${result.e}")

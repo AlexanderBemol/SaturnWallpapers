@@ -93,6 +93,10 @@ fun GalleryScreen(
         viewModel.onBottomScroll()
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.loadData()
+    }
+
     GalleryScreen(
         viewModel.galleryState,
         sharedTransitionScope,

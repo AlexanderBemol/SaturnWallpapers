@@ -4,7 +4,7 @@ import androidx.room.Embedded
 import androidx.room.Relation
 
 data class SaturnPhotoWithMedia(
-    @Embedded val saturnPhoto: SaturnPhoto,
+    @Embedded var saturnPhoto: SaturnPhoto,
     @Relation(
         parentColumn = "id",
         entityColumn = "saturnPhotoId"

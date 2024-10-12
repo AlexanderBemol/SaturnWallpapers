@@ -55,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
@@ -64,6 +65,7 @@ import com.amontdevs.saturnwallpapers.android.ui.components.SaturnImage
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 import com.amontdevs.saturnwallpapers.model.getMedia
 import com.amontdevs.saturnwallpapers.resources.DetailsScreen
 import com.amontdevs.saturnwallpapers.utils.toAPODUrl
@@ -81,9 +83,6 @@ fun FullPictureViewScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.loadData()
-    }
     FullPictureViewScreen(
         viewModel.fullViewState,
         sharedTransitionScope,
@@ -102,7 +101,7 @@ fun FullPictureViewScreen(
     onFavoriteClick: () -> Unit,
     navigateBack: () -> Unit,
 ) {
-    val photoDetailState = photoDetailStateFlow.collectAsState()
+    val photoDetailState = photoDetailStateFlow.collectAsStateWithLifecycle()
     val displayFullscreen = remember { mutableStateOf(false) }
     val onFullscreenClick = {
         displayFullscreen.value = true
@@ -112,28 +111,22 @@ fun FullPictureViewScreen(
         if(photoDetailState.value.saturnPhoto!!.saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
         else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
     )
-
-    if (!displayFullscreen.value) {
-        if (photoDetailState.value.saturnPhoto != null) {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState())
-            ) {
-                ImageContainer(
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope,
-                    filePath = regularMedia?.filepath.toString(),
-                    imageId = photoDetailState.value.saturnPhoto?.saturnPhoto?.id.toString(),
-                    imageDescription = photoDetailState.value.saturnPhoto?.saturnPhoto?.title.toString(),
-                    isFavorite = photoDetailState.value.saturnPhoto?.saturnPhoto?.isFavorite == true,
-                    isImage = photoDetailState.value.saturnPhoto?.saturnPhoto?.isVideo == false,
-                    onFavoriteClick = onFavoriteClick,
-                    goBack = navigateBack,
-                    onFullscreenClick = onFullscreenClick
-                )
-                BottomInformationContent(photoDetailState)
-            }
+    if (photoDetailState.value.saturnPhoto != null) {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState())
+        ) {
+            ImageContainer(
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
+                saturnPhotoWithMedia = photoDetailState.value.saturnPhoto!!,
+                goBack = navigateBack,
+                onFavoriteClick = onFavoriteClick,
+                onFullscreenClick = onFullscreenClick
+            )
+            BottomInformationContent(photoDetailState)
         }
-    } else {
+    }
+    if (displayFullscreen.value) {
         Dialog(
             onDismissRequest = { displayFullscreen.value = false },
             properties = DialogProperties(
@@ -162,25 +155,26 @@ fun FullPictureViewScreen(
 fun ImageContainer(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
-    filePath: String,
-    imageId: String,
-    imageDescription: String,
-    isFavorite: Boolean,
-    isImage: Boolean,
+    saturnPhotoWithMedia: SaturnPhotoWithMedia,
     goBack: () -> Unit,
     onFavoriteClick: () -> Unit,
     onFullscreenClick: () -> Unit
 ) {
+    val filePath = saturnPhotoWithMedia.getMedia(
+        if(saturnPhotoWithMedia.saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
+        else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+    )?.filepath.toString()
+
     Box{
         with(sharedTransitionScope) {
             SaturnImage(
                 filePath = filePath,
-                contentDescription = imageDescription,
+                contentDescription = saturnPhotoWithMedia.saturnPhoto.title,
                 contentScale = ContentScale.FillWidth,
                 modifier = Modifier
                     .fillMaxWidth()
                     .sharedElement(
-                        sharedTransitionScope.rememberSharedContentState(key = "image-$imageId"),
+                        sharedTransitionScope.rememberSharedContentState(key = "image-$saturnPhotoWithMedia.saturnPhoto.id"),
                         animatedVisibilityScope = animatedContentScope
                     )
             )
@@ -205,7 +199,7 @@ fun ImageContainer(
                 FloatingTransparentButton(
                     icon = {
                         Icon(
-                            imageVector = if (isFavorite) Icons.Filled.Favorite
+                            imageVector = if (saturnPhotoWithMedia.saturnPhoto.isFavorite) Icons.Filled.Favorite
                             else Icons.Filled.FavoriteBorder,
                             modifier = Modifier.padding(8.dp),
                             contentDescription = DetailsScreen.getFavoriteButton(),
@@ -214,7 +208,7 @@ fun ImageContainer(
                     }
                 ) { onFavoriteClick() }
                 Spacer(modifier = Modifier.height(8.dp))
-                if (isImage) {
+                if (!saturnPhotoWithMedia.saturnPhoto.isVideo) {
                     FloatingTransparentButton(
                         icon = {
                             Icon(

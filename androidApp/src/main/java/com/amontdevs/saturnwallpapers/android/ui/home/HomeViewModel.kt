@@ -24,11 +24,7 @@ class HomeViewModel(
     private val _homeState = MutableStateFlow(HomeState())
     val homeState: StateFlow<HomeState> = _homeState
 
-    init {
-        loadHomeData()
-    }
-
-    private fun loadHomeData() {
+    fun loadHomeData() {
         viewModelScope.launch {
             val result = saturnPhotosRepository.getSaturnPhoto(timeProvider.getCurrentTime())
             when (result) {
