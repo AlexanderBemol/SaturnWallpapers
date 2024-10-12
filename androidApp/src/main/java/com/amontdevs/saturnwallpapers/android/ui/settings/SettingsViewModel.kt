@@ -52,6 +52,23 @@ class SettingsViewModel(
             _settingsState.value = _settingsState.value.copy(
                 listeningState = ListeningState.START_LISTENING
             )
+        } else {
+            viewModelScope.launch {
+                when (val result = saturnPhotosRepository.areDownloadsNeeded()) {
+                    is SaturnResult.Success -> {
+                        if (result.data) {
+                            _settingsState.value = _settingsState.value.copy(
+                                listeningState = ListeningState.START_LISTENING
+                            )
+                        } else {
+                            Log.d("SettingsViewModel", "Not downloads needed")
+                        }
+                    }
+                    is SaturnResult.Error -> {
+                        Log.d("SettingsViewModel", "Error: ${result.e}")
+                    }
+                }
+            }
         }
     }
 
