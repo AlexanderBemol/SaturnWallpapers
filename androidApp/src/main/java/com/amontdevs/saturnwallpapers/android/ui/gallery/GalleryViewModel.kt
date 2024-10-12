@@ -3,6 +3,8 @@ package com.amontdevs.saturnwallpapers.android.ui.gallery
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
+import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper
 import com.amontdevs.saturnwallpapers.model.RefreshOperationStatus
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
 import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
@@ -14,6 +16,7 @@ import kotlinx.coroutines.launch
 
 class GalleryViewModel(
     private val saturnPhotosRepository: ISaturnPhotosRepository,
+    private val workManager: WorkManager,
     private val filterByFav: Boolean = false,
 ): ViewModel() {
 
@@ -42,6 +45,20 @@ class GalleryViewModel(
                 }
                 is SaturnResult.Error -> {
                     Log.d("GalleryViewModel", result.e.message.toString())
+                }
+            }
+        }
+        viewModelScope.launch {
+            when (val result = saturnPhotosRepository.areDownloadsNeeded()) {
+                is SaturnResult.Success -> {
+                    if (result.data) {
+                        WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)
+                    } else {
+                        Log.d("HomeViewModel", "Not downloads needed")
+                    }
+                }
+                is SaturnResult.Error -> {
+                    Log.d("HomeViewModel", "Error: ${result.e}")
                 }
             }
         }

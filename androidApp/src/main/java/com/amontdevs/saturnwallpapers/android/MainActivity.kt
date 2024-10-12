@@ -153,7 +153,7 @@ fun AppContent(navController: NavHostController) {
                         it.arguments?.getBoolean("isFavoriteState")?.let { isFavoriteState ->
                             GalleryScreen(
                                 navController,
-                                koinViewModel(parameters = { parametersOf(isFavoriteState) }),
+                                koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context), isFavoriteState) }),
                                 this@SharedTransitionLayout,
                                 this@composable
                             )
