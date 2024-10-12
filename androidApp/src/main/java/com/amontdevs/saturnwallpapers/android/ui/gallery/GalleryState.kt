@@ -8,5 +8,6 @@ data class GalleryState(
     val areFiltersVisible: Boolean = false,
     val saturnPhotos: List<SaturnPhotoWithMedia> = listOf(),
     val isFetchingPhotos: Boolean = false,
-    val isLoaded: Boolean = false
+    val isLoaded: Boolean = false,
+    val pendingPhotosToDownload: Int = 4
 )

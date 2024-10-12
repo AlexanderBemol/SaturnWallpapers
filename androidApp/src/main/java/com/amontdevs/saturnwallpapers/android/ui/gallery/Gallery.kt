@@ -160,6 +160,7 @@ fun GalleryScreen(
                     galleryState.value.saturnPhotos,
                     lazyStaggeredGridState,
                     galleryState.value.isFetchingPhotos,
+                    galleryState.value.pendingPhotosToDownload,
                     onBottomScroll
                 )
             }
@@ -224,6 +225,7 @@ fun GalleryGrid(
     listOfData: List<SaturnPhotoWithMedia>,
     lazyStaggeredGridState: LazyStaggeredGridState,
     isFetchingPhotos: Boolean,
+    pendingPhotosToDownload: Int,
     onBottomScroll: () -> Unit
 ) {
     Log.d("Gallery", "Grid")
@@ -272,7 +274,7 @@ fun GalleryGrid(
             }
         }
         if (isFetchingPhotos) {
-            repeat(4){
+            repeat(pendingPhotosToDownload){
                 item {
                     CircularProgressIndicator(
                         modifier = Modifier.padding(64.dp)

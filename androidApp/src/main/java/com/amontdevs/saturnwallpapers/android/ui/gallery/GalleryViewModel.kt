@@ -12,6 +12,7 @@ import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class GalleryViewModel(
@@ -58,6 +59,14 @@ class GalleryViewModel(
                 }
             }
         }
+        viewModelScope.launch {
+            saturnPhotosRepository.saturnPhotosFlow.collect{
+               if( _galleryState.value.isFetchingPhotos) {
+                   wholeSaturnList.add(it)
+                   sortAndFilterList(_galleryState.value.pendingPhotosToDownload - 1)
+               }
+            }
+        }
     }
 
     fun sortAndFilter(toggleFilterByFav: Boolean = false, toggleAscSort: Boolean = false) {
@@ -79,11 +88,10 @@ class GalleryViewModel(
     fun onBottomScroll() {
         if(saturnPhotosRepository.saturnPhotoOperation.value is RefreshOperationStatus.OperationFinished
             && !_galleryState.value.isAscSortSelected && !_galleryState.value.isFavoriteSelected) {
-            _galleryState.value = _galleryState.value.copy(isFetchingPhotos = true)
+            _galleryState.value = _galleryState.value.copy(isFetchingPhotos = true, pendingPhotosToDownload = 4)
             viewModelScope.launch {
                 when (val result = saturnPhotosRepository.populateAndGetPastDays(4u)){
                     is SaturnResult.Success -> {
-                        wholeSaturnList += result.data
                         _galleryState.value = _galleryState.value.copy(isFetchingPhotos = false)
                         sortAndFilterList()
                     }
@@ -98,7 +106,7 @@ class GalleryViewModel(
         }
     }
 
-    private fun sortAndFilterList(){
+    private fun sortAndFilterList(pendingPhotosToDownload: Int = 0){
         val filteredList = if(!_galleryState.value.isFavoriteSelected) wholeSaturnList
         else wholeSaturnList.filter { it.saturnPhoto.isFavorite }
         val orderedList = if(_galleryState.value.isAscSortSelected) filteredList.sortedBy { it.saturnPhoto.timestamp }
@@ -106,7 +114,8 @@ class GalleryViewModel(
 
         _galleryState.value = _galleryState.value.copy(
             saturnPhotos = orderedList,
-            isLoaded = true
+            isLoaded = true,
+            pendingPhotosToDownload = pendingPhotosToDownload
         )
     }
 

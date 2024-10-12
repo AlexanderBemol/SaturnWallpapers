@@ -30,9 +30,8 @@ import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.days
 
 interface ISaturnPhotosRepository {
-    val saturnPhotosFlow: MutableSharedFlow<SaturnResult<SaturnPhoto>>
+    val saturnPhotosFlow: MutableSharedFlow<SaturnPhotoWithMedia>
     val saturnPhotoOperation: StateFlow<RefreshOperationStatus>
-    val operationProgress: StateFlow<Int>
     suspend fun populate(): SaturnResult<PopulateOperationStatus>
     suspend fun getSaturnPhoto(date: Instant): SaturnResult<SaturnPhotoWithMedia>
     suspend fun getSaturnPhoto(id: Long): SaturnResult<SaturnPhotoWithMedia>
@@ -55,15 +54,12 @@ class SaturnPhotosRepository(
     private val saturnSettings: ISettingsSource
 ): ISaturnPhotosRepository {
 
-    private val _saturnPhotosFlow = MutableSharedFlow<SaturnResult<SaturnPhoto>>()
+    private val _saturnPhotosFlow = MutableSharedFlow<SaturnPhotoWithMedia>()
     override val saturnPhotosFlow = _saturnPhotosFlow
 
     private val _saturnPhotoOperation =
         MutableStateFlow<RefreshOperationStatus>(RefreshOperationStatus.OperationFinished())
     override val saturnPhotoOperation = _saturnPhotoOperation
-
-    private val _operationProgress = MutableStateFlow(0)
-    override val operationProgress = _operationProgress
 
     override suspend fun populate(): SaturnResult<PopulateOperationStatus> {
         return try {
@@ -215,11 +211,13 @@ class SaturnPhotosRepository(
             DataMaxAge.ONE_YEAR -> currentTime.minus(365.days)
         }
         val dataToDelete = saturnPhotoDao.findOldData(validOldestData.toEpochMilliseconds())
-        dataToDelete.forEach {
-            it.mediaList.forEach { media ->
-                media.deleteMedia()
-            }
-            saturnPhotoMediaDao.delete(*it.mediaList.toTypedArray())
+        dataToDelete.forEach { saturnPhotoWithMedia ->
+            saturnPhotoWithMedia.mediaList
+                .filter { it.status == SaturnPhotoMediaStatus.DOWNLOADED }
+                .forEach { media ->
+                    media.deleteMedia()
+                }
+            saturnPhotoMediaDao.delete(*saturnPhotoWithMedia.mediaList.toTypedArray())
         }
         saturnPhotoDao.deleteOldData(validOldestData.toEpochMilliseconds())
     }
@@ -280,7 +278,9 @@ class SaturnPhotosRepository(
         }
 
         withContext(Dispatchers.IO) {
-            saturnPhotosWithMedia.forEach { saturnPhotoWithMedia ->
+            saturnPhotosWithMedia.sortedByDescending { it.saturnPhoto.timestamp }.forEach {
+                saturnPhotoWithMedia ->
+
                 val mediaToDownload = saturnPhotoWithMedia.mediaList
                     .filter { mediaTypes.contains(it.mediaType)
                             && it.status != SaturnPhotoMediaStatus.DOWNLOADED
@@ -294,6 +294,7 @@ class SaturnPhotosRepository(
                         (saturnPhotosWithMedia.indexOf(saturnPhotoWithMedia) + 1) * 100 / saturnPhotosWithMedia.size.toDouble()
                     )
                 )
+                _saturnPhotosFlow.emit(saturnPhotoWithMedia)
             }
         }
     }
