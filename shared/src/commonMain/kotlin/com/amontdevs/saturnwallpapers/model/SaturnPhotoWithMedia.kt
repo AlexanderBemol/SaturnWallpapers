@@ -14,9 +14,16 @@ data class SaturnPhotoWithMedia(
 
 fun SaturnPhotoWithMedia.getMedia(mediaType: SaturnPhotoMediaType) = when (mediaType) {
     SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE ->
-        mediaList.find { it.mediaType == SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE && it.filepath != "" }
+        mediaList.find { it.mediaType == SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+                && it.filepath != ""
+                && it.status == SaturnPhotoMediaStatus.DOWNLOADED  }
     SaturnPhotoMediaType.VIDEO ->
-        mediaList.find { it.mediaType == SaturnPhotoMediaType.VIDEO && it.filepath != "" }
+        mediaList.find { it.mediaType == SaturnPhotoMediaType.VIDEO
+                && it.filepath != ""
+                && it.status == SaturnPhotoMediaStatus.DOWNLOADED }
     SaturnPhotoMediaType.HIGH_QUALITY_IMAGE ->
-            mediaList.find { it.mediaType == SaturnPhotoMediaType.HIGH_QUALITY_IMAGE && it.filepath != "" }
+            mediaList.find { it.mediaType == SaturnPhotoMediaType.HIGH_QUALITY_IMAGE
+                    && it.filepath != ""
+                    && it.status == SaturnPhotoMediaStatus.DOWNLOADED
+            }
 }
