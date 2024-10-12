@@ -61,7 +61,7 @@ fun SaturnImage(
     filePath: String,
     contentDescription: String,
     contentScale: ContentScale,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     val context = LocalContext.current
     val imageRequest = remember(filePath) {

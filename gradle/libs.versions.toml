@@ -25,6 +25,8 @@ room = "2.7.0-alpha09"
 serialization = "1.6.3"
 sqlite = "2.5.0-alpha09"
 work = "2.9.1"
+roomCommon = "2.6.1"
+contentpager = "1.0.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -61,6 +63,8 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref="room" }
 serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 work = { module = "androidx.work:work-runtime-ktx", version.ref = "work"}
+androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
+androidx-contentpager = { group = "androidx.contentpager", name = "contentpager", version.ref = "contentpager" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

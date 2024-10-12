@@ -19,12 +19,11 @@ import org.koin.core.context.GlobalContext
 import java.io.File
 import java.io.FileOutputStream
 
-actual suspend fun platformSavePicture(bytes: ByteReadChannel, date: String): SaturnResult<String> {
+actual suspend fun platformSavePicture(bytes: ByteReadChannel, filename: String): SaturnResult<String> {
     return try {
         val context = GlobalContext.get().get<Context>()
         val directory = context.getDir("images", Context.MODE_PRIVATE)
-        val filename = "${Clock.System.now().toEpochMilliseconds()}-$date"
-        val file = File(directory, filename)
+        val file = File(directory, "$filename-${Clock.System.now().toEpochMilliseconds()}")
         val bitmap = BitmapFactory.decodeStream(bytes.toByteArray().inputStream())
         val outputStream = withContext(Dispatchers.IO) { FileOutputStream(file) }
         val downscaleFactor = findDownscaleFactor(bitmap.byteCount)
@@ -41,7 +40,7 @@ actual suspend fun platformSavePicture(bytes: ByteReadChannel, date: String): Sa
         withContext(Dispatchers.IO) {
             outputStream.close()
         }
-        SaturnResult.Success(filename)
+        SaturnResult.Success(file.name)
     } catch (e: Exception) {
         SaturnResult.Error(e)
     }

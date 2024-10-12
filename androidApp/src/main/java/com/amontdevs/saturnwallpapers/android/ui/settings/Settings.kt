@@ -1,5 +1,6 @@
 package com.amontdevs.saturnwallpapers.android.ui.settings
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -26,6 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,17 +39,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.work.WorkInfo
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.ConfirmDialogLoading
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.model.DataMaxAge
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
+import com.amontdevs.saturnwallpapers.model.RefreshOperationStatus
 import com.amontdevs.saturnwallpapers.model.SettingsMenuOptions
 import com.amontdevs.saturnwallpapers.model.WallpaperScreen
 import com.amontdevs.saturnwallpapers.resources.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.math.roundToInt
 
 @Composable
 fun SettingsScreen(settingsViewModel: SettingsViewModel){
@@ -61,6 +70,27 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel){
         settingsViewModel.cancelSettingChangeOperation()
     }
 
+    var downloadingProgress by remember { mutableDoubleStateOf(-1.00 ) }
+
+    when(settingsViewModel.settingsState.collectAsStateWithLifecycle().value.listeningState) {
+        ListeningState.START_LISTENING -> settingsViewModel.startListeningToDownloadState()
+        ListeningState.KEEP_LISTENING -> {
+            settingsViewModel.progressLiveData.observe(LocalLifecycleOwner.current){ workInfo ->
+                if(workInfo != null) {
+                    val progress = workInfo.progress.keyValueMap["progress"] as? Double
+                    progress?.let {
+                        downloadingProgress = progress
+                    }
+                    if (progress ==null && workInfo.state == WorkInfo.State.SUCCEEDED){
+                        downloadingProgress = 100.00
+                        settingsViewModel.stopListeningToDownloadState()
+                    }
+                }
+            }
+        }
+        ListeningState.NOT_LISTENING -> {}
+    }
+
     SettingsScreen(
         settingsViewModel.settingsState,
         onDailyWallpaperChanged,
@@ -68,6 +98,7 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel){
         onDropDownIndexChanged,
         onQualityDropDownDialogConfirm,
         onDownloadOverCellularDialogConfirm,
+        downloadingProgress,
         onDialogDismiss
     )
 }
@@ -80,6 +111,7 @@ fun SettingsScreen(
     onDropDownIndexChanged: (SettingsMenuOptions) -> Unit,
     onQualityDropDownDialogConfirm: () -> Unit,
     onDownloadOverCellularDialogConfirm: () -> Unit,
+    downloadingProgress: Double,
     onDialogDismiss: () -> Unit
 ){
     val settingsState = settingsStateFlow.collectAsState()
@@ -136,6 +168,7 @@ fun SettingsScreen(
                             onCheckedChange = onDownloadOverCellularChanged
                         )
                         QualityOption(
+                            downloadingProgress,
                             mediaQuality = settingsState.value.settings.mediaQuality,
                             onIndexChanged = {
                                 if (it != settingsState.value.settings.mediaQuality.id){
@@ -172,6 +205,7 @@ fun SettingsScreen(
 fun OptionRow(
     addDivider: Boolean = true,
     optionExplanation: String,
+    optionalFooter: @Composable () -> Unit = {},
     content: @Composable () -> Unit
 ) {
     Row(
@@ -195,10 +229,13 @@ fun OptionRow(
                 bottom = 16.dp
             )
     ) {
-        Text(
-            text = optionExplanation,
-            style = MaterialTheme.typography.bodySmall,
-        )
+        Column {
+            Text(
+                text = optionExplanation,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            optionalFooter()
+        }
     }
     if (addDivider) {
         HorizontalDivider()
@@ -269,6 +306,7 @@ fun ScreenOfWallpaperOption(
 
 @Composable
 fun QualityOption(
+    downloadingProgress: Double,
     mediaQuality: MediaQuality,
     onIndexChanged: (Int) -> Unit
 ) {
@@ -279,7 +317,21 @@ fun QualityOption(
         }
     }
     OptionRow(
-        optionExplanation = Settings.getSettingsQualityDescription()
+        optionExplanation = Settings.getSettingsQualityDescription(),
+        optionalFooter = {
+            if (downloadingProgress >= 0.0 && downloadingProgress < 99.0) {
+                Text(
+                    style = MaterialTheme.typography.bodySmall,
+                    text = "Downloading: ${downloadingProgress.roundToInt()}%",
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
+                )
+            }
+        }
     ) {
         OptionDropDown(
             title = Settings.getSettingsQualityTitle(),
@@ -406,6 +458,7 @@ fun SettingsPreview() {
                 onDropDownIndexChanged = { _, ->},
                 onQualityDropDownDialogConfirm = {},
                 onDownloadOverCellularDialogConfirm = {},
+                downloadingProgress = 0.0,
                 onDialogDismiss = {}
             )
             it

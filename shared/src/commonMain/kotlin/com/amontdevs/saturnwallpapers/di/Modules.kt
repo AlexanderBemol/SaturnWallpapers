@@ -9,6 +9,7 @@ import com.amontdevs.saturnwallpapers.source.FileManager
 import com.amontdevs.saturnwallpapers.source.IAPODService
 import com.amontdevs.saturnwallpapers.source.IFileManager
 import com.amontdevs.saturnwallpapers.source.ISaturnPhotoDao
+import com.amontdevs.saturnwallpapers.source.ISaturnPhotoMediaDao
 import com.amontdevs.saturnwallpapers.source.ISettingsSource
 import com.amontdevs.saturnwallpapers.source.ITimeProvider
 import com.amontdevs.saturnwallpapers.source.SaturnDatabase
@@ -55,6 +56,8 @@ fun buildSaturnSettings(settings: Settings): ISettingsSource = SettingsSource(se
 
 fun provideSaturnPhotoDao(saturnDb: SaturnDatabase): ISaturnPhotoDao = saturnDb.saturnPhotoDao()
 
+fun provideSaturnPhotoMediaDao(saturnDb: SaturnDatabase): ISaturnPhotoMediaDao = saturnDb.saturnPhotoMediaDao()
+
 val sourceModules = module {
     single { buildLogger() }
     single { buildTimeProvider() }
@@ -64,6 +67,7 @@ val sourceModules = module {
     single { buildSettings() }
     single { buildSaturnSettings(get()) }
     single { provideSaturnPhotoDao(get()) }
+    single { provideSaturnPhotoMediaDao(get()) }
 }
 
 fun buildWallpaperSetter(logger: ISaturnLogger, fileManager: IFileManager): IWallpaperSetter =
@@ -77,16 +81,17 @@ fun buildSaturnPhotosRepository(
     logger: ISaturnLogger,
     apodService: IAPODService,
     saturnPhotoDao: ISaturnPhotoDao,
+    saturnPhotoMediaDao: ISaturnPhotoMediaDao,
     timeProvider: ITimeProvider,
     fileManager: IFileManager,
     saturnSettings: ISettingsSource
 ): ISaturnPhotosRepository =
-    SaturnPhotosRepository(logger, apodService, saturnPhotoDao, timeProvider, fileManager, saturnSettings)
+    SaturnPhotosRepository(logger, apodService, saturnPhotoDao, saturnPhotoMediaDao, timeProvider, fileManager, saturnSettings)
 
 fun buildSettingsRepository(settingsSource: ISettingsSource): ISettingsRepository =
     SettingsRepository(settingsSource)
 
 val repositoryModules = module {
-    factory { buildSaturnPhotosRepository(get(), get(), get(), get(), get(), get()) }
+    factory { buildSaturnPhotosRepository(get(), get(), get(), get(), get(), get(), get()) }
     factory { buildSettingsRepository(get()) }
 }

@@ -3,7 +3,7 @@ package com.amontdevs.saturnwallpapers.source
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import io.ktor.utils.io.ByteReadChannel
 
-expect suspend fun platformSavePicture(bytes: ByteReadChannel, date: String): SaturnResult<String>
+expect suspend fun platformSavePicture(bytes: ByteReadChannel, filename: String): SaturnResult<String>
 
 expect fun platformGetPicture(fileName: String): SaturnResult<ByteArray>
 
@@ -13,14 +13,14 @@ expect fun platformSavePictureToExternalStorage(filepath: String): SaturnResult<
 
 
 interface IFileManager {
-    suspend fun savePicture(bytes: ByteReadChannel, date: String): SaturnResult<String>
+    suspend fun savePicture(bytes: ByteReadChannel, filename: String): SaturnResult<String>
     fun deletePicture(fileName: String): SaturnResult<Unit>
     fun getPicture(fileName: String): SaturnResult<ByteArray>
     suspend fun savePictureToExternalStorage(filepath: String): SaturnResult<Unit>
 }
 
 class FileManager: IFileManager {
-    override suspend fun savePicture(bytes: ByteReadChannel, date: String) = platformSavePicture(bytes, date)
+    override suspend fun savePicture(bytes: ByteReadChannel, fileName: String) = platformSavePicture(bytes, fileName)
     override fun deletePicture(fileName: String): SaturnResult<Unit> = platformDeletePicture(fileName)
     override fun getPicture(fileName: String) = platformGetPicture(fileName)
     override suspend fun savePictureToExternalStorage(filepath: String): SaturnResult<Unit> =

@@ -1,6 +1,5 @@
 package com.amontdevs.saturnwallpapers.repository
 
-import com.amontdevs.saturnwallpapers.model.AlreadyPopulatedException
 import com.amontdevs.saturnwallpapers.model.ApodModel
 import com.amontdevs.saturnwallpapers.model.DataMaxAge
 import com.amontdevs.saturnwallpapers.model.MediaQuality
@@ -8,71 +7,81 @@ import com.amontdevs.saturnwallpapers.model.PhotoNotFoundException
 import com.amontdevs.saturnwallpapers.model.RefreshOperationStatus
 import com.amontdevs.saturnwallpapers.model.SaturnConfig
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMedia
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaStatus
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 import com.amontdevs.saturnwallpapers.model.SaturnResult
+import com.amontdevs.saturnwallpapers.repository.SaturnPhotosRepository.PopulateOperationStatus
 import com.amontdevs.saturnwallpapers.source.IAPODService
 import com.amontdevs.saturnwallpapers.source.IFileManager
 import com.amontdevs.saturnwallpapers.source.ISaturnPhotoDao
+import com.amontdevs.saturnwallpapers.source.ISaturnPhotoMediaDao
 import com.amontdevs.saturnwallpapers.source.ISettingsSource
 import com.amontdevs.saturnwallpapers.source.ITimeProvider
 import com.amontdevs.saturnwallpapers.utils.ISaturnLogger
-import com.amontdevs.saturnwallpapers.utils.SaturnLogger
 import com.amontdevs.saturnwallpapers.utils.toCommonFormat
 import com.amontdevs.saturnwallpapers.utils.toInstant
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.days
 
 interface ISaturnPhotosRepository {
-    val saturnPhotosFlow: MutableSharedFlow<SaturnResult<SaturnPhoto>>
+    val saturnPhotosFlow: MutableSharedFlow<SaturnPhotoWithMedia>
     val saturnPhotoOperation: StateFlow<RefreshOperationStatus>
-    val operationProgress: StateFlow<Int>
-    suspend fun populate(): SaturnResult<Unit>
-    suspend fun getSaturnPhoto(date: Instant): SaturnResult<SaturnPhoto>
-    suspend fun getSaturnPhoto(id: Int): SaturnResult<SaturnPhoto>
-    suspend fun getAllSaturnPhotos(): SaturnResult<List<SaturnPhoto>>
+    suspend fun populate(): SaturnResult<PopulateOperationStatus>
+    suspend fun getSaturnPhoto(date: Instant): SaturnResult<SaturnPhotoWithMedia>
+    suspend fun getSaturnPhoto(id: Long): SaturnResult<SaturnPhotoWithMedia>
+    suspend fun getAllSaturnPhotos(): SaturnResult<List<SaturnPhotoWithMedia>>
     suspend fun updateSaturnPhoto(saturnPhoto: SaturnPhoto): SaturnResult<Unit>
-    suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhoto>>
+    suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhotoWithMedia>>
     suspend fun refresh(): SaturnResult<Unit>
-    suspend fun updateMediaQuality(mediaQuality: MediaQuality): SaturnResult<Unit>
+    suspend fun areDownloadsNeeded(): SaturnResult<Boolean>
+    suspend fun downloadNotDownloadedPhotos(): SaturnResult<Unit>
+    suspend fun deleteHighQualityPhotos(): SaturnResult<Unit>
 }
 
 class SaturnPhotosRepository(
     private val saturnLogger: ISaturnLogger,
     private val apodService: IAPODService,
     private val saturnPhotoDao: ISaturnPhotoDao,
+    private val saturnPhotoMediaDao: ISaturnPhotoMediaDao,
     private val timeProvider: ITimeProvider,
     private val fileManager: IFileManager,
     private val saturnSettings: ISettingsSource
 ): ISaturnPhotosRepository {
 
-    private val _saturnPhotosFlow = MutableSharedFlow<SaturnResult<SaturnPhoto>>()
+    private val _saturnPhotosFlow = MutableSharedFlow<SaturnPhotoWithMedia>()
     override val saturnPhotosFlow = _saturnPhotosFlow
 
     private val _saturnPhotoOperation =
-        MutableStateFlow<RefreshOperationStatus>(RefreshOperationStatus.OperationFinished)
+        MutableStateFlow<RefreshOperationStatus>(RefreshOperationStatus.OperationFinished())
     override val saturnPhotoOperation = _saturnPhotoOperation
 
-    private val _operationProgress = MutableStateFlow(0)
-    override val operationProgress = _operationProgress
-
-    override suspend fun populate(): SaturnResult<Unit> {
+    override suspend fun populate(): SaturnResult<PopulateOperationStatus> {
         return try {
             if(!saturnSettings.isAlreadyPopulated()) {
+                _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress(0.00))
                 val daysOfData = SaturnConfig.DAYS_OF_DATA - 1.days
                 val today = timeProvider.getCurrentTime()
                 val startDate = timeProvider.getCurrentTime().minus(daysOfData)
                 downloadDaysOfData(startDate, today)
                 saturnSettings.setAlreadyPopulated()
-                SaturnResult.Success(Unit)
-            } else SaturnResult.Error(AlreadyPopulatedException())
+                _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished(100.00))
+                SaturnResult.Success(PopulateOperationStatus.Succeeded)
+            } else SaturnResult.Success(PopulateOperationStatus.AlreadyPopulated)
         } catch (e: Exception) {
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
             SaturnResult.Error(e)
         }
     }
 
-    override suspend fun getSaturnPhoto(date: Instant): SaturnResult<SaturnPhoto> {
+    override suspend fun getSaturnPhoto(date: Instant): SaturnResult<SaturnPhotoWithMedia> {
         return try {
-            SaturnResult.Success(saturnPhotoDao.getSaturnPhoto(date.toEpochMilliseconds()))
+            SaturnResult.Success(saturnPhotoDao.getSaturnPhotoByTimestamp(date.toEpochMilliseconds()))
         } catch (e: NoSuchElementException) {
             SaturnResult.Error(PhotoNotFoundException())
         } catch (e: Exception) {
@@ -80,7 +89,7 @@ class SaturnPhotosRepository(
         }
     }
 
-    override suspend fun getSaturnPhoto(id: Int): SaturnResult<SaturnPhoto> {
+    override suspend fun getSaturnPhoto(id: Long): SaturnResult<SaturnPhotoWithMedia> {
         return try {
             SaturnResult.Success(saturnPhotoDao.getSaturnPhoto(id))
         } catch (e: NoSuchElementException) {
@@ -90,7 +99,7 @@ class SaturnPhotosRepository(
         }
     }
 
-    override suspend fun getAllSaturnPhotos(): SaturnResult<List<SaturnPhoto>> {
+    override suspend fun getAllSaturnPhotos(): SaturnResult<List<SaturnPhotoWithMedia>> {
         return try {
             SaturnResult.Success(saturnPhotoDao.getAllSaturnPhotos())
         } catch (e: Exception) {
@@ -106,42 +115,92 @@ class SaturnPhotosRepository(
         }
     }
 
-    override suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhoto>> {
+    override suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhotoWithMedia>> {
         return try {
-            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress)
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress())
             val olderSavedPhoto = Instant.fromEpochMilliseconds(
-                saturnPhotoDao.getAllSaturnPhotos().minByOrNull { it.timestamp }!!.timestamp
+                saturnPhotoDao.getAllSaturnPhotos()
+                    .map { it.saturnPhoto }
+                    .minByOrNull { it.timestamp }
+                    !!.timestamp
             )
             val newStartTime = olderSavedPhoto.minus(daysOfData.toInt().days)
             val newEndTime = olderSavedPhoto.minus(1.days)
             downloadDaysOfData(newStartTime, newEndTime)
-            val listOfSaturnPhotos = saturnPhotoDao.
-            getSaturnPhotos(newStartTime.toEpochMilliseconds(), newEndTime.toEpochMilliseconds())
-            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished)
+            val listOfSaturnPhotos = saturnPhotoDao
+                .getSaturnPhotos(newStartTime.toEpochMilliseconds(), newEndTime.toEpochMilliseconds())
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
             SaturnResult.Success(listOfSaturnPhotos)
         } catch (e: Exception) {
-            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished)
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
             SaturnResult.Error(e)
         }
     }
 
     override suspend fun refresh(): SaturnResult<Unit> {
         return try {
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress())
             //remove old data
             pruneOldData()
             //new data to download
             val lastSavedPhoto = Instant.fromEpochMilliseconds(
-                saturnPhotoDao.getAllSaturnPhotos().maxByOrNull { it.timestamp }!!.timestamp
+                saturnPhotoDao.getAllSaturnPhotos()
+                    .map { it.saturnPhoto }
+                    .maxByOrNull { it.timestamp }
+                    !!.timestamp
             )
             val today = timeProvider.getCurrentTime()
             if(today.minus(lastSavedPhoto) >= 1.days) {
                 downloadDaysOfData(lastSavedPhoto.plus(1.days),today)
             }
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
             SaturnResult.Success(Unit)
         } catch (e: Exception) {
             SaturnResult.Error(e)
         }
     }
+
+    override suspend fun areDownloadsNeeded(): SaturnResult<Boolean> {
+        return try {
+            SaturnResult.Success(getNotDownloadedPhotos().isNotEmpty())
+        } catch (e: Exception) {
+            SaturnResult.Error(e)
+        }
+    }
+
+    override suspend fun downloadNotDownloadedPhotos(): SaturnResult<Unit> {
+        return try {
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress(0.0))
+            val notDownloadedPhotos = getNotDownloadedPhotos()
+            val isHQEnabled = saturnSettings.getSettings().mediaQuality == MediaQuality.HIGH
+            downloadMediaAndUpdate(notDownloadedPhotos, if(isHQEnabled) null else MediaQuality.NORMAL)
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
+            SaturnResult.Success(Unit)
+        } catch (e: Exception) {
+            SaturnResult.Error(e)
+        }
+    }
+
+    override suspend fun deleteHighQualityPhotos(): SaturnResult<Unit> {
+        return try {
+            val hqMedia = saturnPhotoDao.getAllSaturnPhotos()
+                .flatMap { it.mediaList }
+                .filter { it.mediaType == SaturnPhotoMediaType.HIGH_QUALITY_IMAGE }
+
+            hqMedia.forEach {
+               it.deleteMedia()
+            }
+
+            SaturnResult.Success(Unit)
+        } catch (e: Exception) {
+            SaturnResult.Error(e)
+        }
+    }
+
+    private suspend fun getNotDownloadedPhotos() =
+        saturnPhotoDao.getAllSaturnPhotos()
+            .filter { it.mediaList.any { media -> media.status != SaturnPhotoMediaStatus.DOWNLOADED } }
+
 
     private suspend fun pruneOldData() {
         val currentTime = timeProvider.getCurrentTime()
@@ -151,135 +210,155 @@ class SaturnPhotosRepository(
             DataMaxAge.SIX_MONTHS -> currentTime.minus(180.days)
             DataMaxAge.ONE_YEAR -> currentTime.minus(365.days)
         }
-        saturnPhotoDao.findOldData(validOldestData.toEpochMilliseconds()).forEach {
-            if(it.regularPath.isNotEmpty()) fileManager.deletePicture(it.regularPath)
-            if(it.highDefinitionPath.isNotEmpty()) fileManager.deletePicture(it.highDefinitionPath)
+        val dataToDelete = saturnPhotoDao.findOldData(validOldestData.toEpochMilliseconds())
+        dataToDelete.forEach { saturnPhotoWithMedia ->
+            saturnPhotoWithMedia.mediaList
+                .filter { it.status == SaturnPhotoMediaStatus.DOWNLOADED }
+                .forEach { media ->
+                    media.deleteMedia()
+                }
+            saturnPhotoMediaDao.delete(*saturnPhotoWithMedia.mediaList.toTypedArray())
         }
         saturnPhotoDao.deleteOldData(validOldestData.toEpochMilliseconds())
     }
 
-    override suspend fun updateMediaQuality(mediaQuality: MediaQuality): SaturnResult<Unit> {
-        return try {
-            _operationProgress.emit(0)
-            val saturnPhotos = saturnPhotoDao.getAllSaturnPhotos()
-            when(mediaQuality){
-                MediaQuality.NORMAL -> {
-                    //Remove all high quality photos
-                    saturnLogger.logMessage(TAG, "Removing all high quality photos")
-                    saturnPhotos.forEach {
-                        if(it.mediaType != "image") return@forEach
-                        fileManager.deletePicture(it.highDefinitionPath)
-                        it.highDefinitionPath = ""
-                    }
-                    saturnPhotoDao.updateSaturnPhoto(*saturnPhotos.toTypedArray())
-                }
-                MediaQuality.HIGH -> {
-                    //Download all stored photos with high quality
-                    saturnLogger.logMessage(TAG, "Downloading all high quality photos")
-                    saturnPhotos.forEachIndexed { index, it ->
-                        if(it.mediaType != "image") return@forEachIndexed
-                        val hqPath = fileManager.savePicture(
-                            apodService.downloadPhoto(it.highDefinitionUrl),
-                            it.timestamp.toInstant().toCommonFormat()
-                        )
-                        saturnLogger.logMessage(TAG, "High quality photo downloaded: $index")
-                        when(hqPath) {
-                            is SaturnResult.Success -> it.highDefinitionPath = hqPath.data
-                            is SaturnResult.Error -> {
-                                it.highDefinitionPath
-                                saturnLogger.logError(TAG,hqPath.e, hqPath.e.message.toString())
-                            }
-                        }
-                    }
-                    saturnPhotoDao.updateSaturnPhoto(*saturnPhotos.toTypedArray())
-                }
-            }
-            SaturnResult.Success(Unit)
-        } catch (e: Exception) {
-            SaturnResult.Error(e)
-        }
-    }
-
     private suspend fun downloadDaysOfData(startTime: Instant, endTime: Instant){
         val apodModelList = apodService.getPhotoOfDays(startTime.toCommonFormat(), endTime.toCommonFormat())
-
-        val saturnPhotosList = apodModelList.map {
-            val saturnResult = it.toSaturnPhoto()
-            _saturnPhotosFlow.emit(saturnResult)
-            saturnResult
-        }
-
-        saturnPhotosList.filterIsInstance<SaturnResult.Error>()
-            .map { it.e }
-            //.forEach { logError(TAG, it.message.toString()) }
-
-        saturnPhotosList
-            .filterIsInstance<SaturnResult.Success<SaturnPhoto>>().map { it.data }
-            .forEach {
-                saturnPhotoDao.insertSaturnPhoto(it)
-            }
+        val saturnPhotos = convertAndInsertApodModelList(apodModelList)
+        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL)
     }
 
-    private suspend fun ApodModel.toSaturnPhoto() : SaturnResult<SaturnPhoto> {
-        return try {
-            val isHQActivated = saturnSettings.getSettings().mediaQuality == MediaQuality.HIGH
-            val regularUrl =
-                if(this.mediaType == "image") this.regularDefinitionUrl else this.thumbnailUrl
+    private suspend fun convertAndInsertApodModelList(apodModelList: List<ApodModel>): List<SaturnPhotoWithMedia> {
+        val saturnPhotos = apodModelList.map { it.toSaturnPhoto() }
+        return withContext(Dispatchers.IO) {
+            val insertedIds = saturnPhotoDao.insertSaturnPhoto(*saturnPhotos.toTypedArray())
 
-            val regularPhoto = apodService.downloadPhoto(regularUrl.toString())
-            val regularPicture = fileManager.savePicture(regularPhoto, this.date.toString())
-
-            val hdPicture = if(isHQActivated && this.highDefinitionUrl != null) {
-                val hqPhoto = apodService.downloadPhoto(this.highDefinitionUrl.toString(),)
-                fileManager.savePicture(hqPhoto, this.date.toString())
-            } else regularPicture
-
-            when(regularPicture){
-                is SaturnResult.Success ->
-                    SaturnResult.Success(SaturnPhoto(
-                        timestamp = this.date.toString().toInstant("yyyy-MM-dd").toEpochMilliseconds(),
-                        title = this.title.toString(),
-                        description = this.explanation.toString(),
-                        authors = this.author.toString(),
-                        mediaType = this.mediaType.toString(),
-                        regularUrl = this.regularDefinitionUrl.toString(),
-                        highDefinitionUrl = this.highDefinitionUrl.toString(),
-                        regularPath = regularPicture.data,
-                        highDefinitionPath =
-                        if(hdPicture is SaturnResult.Success && isHQActivated && this.mediaType == "image") hdPicture.data else "",
-                        videoUrl = if(this.mediaType == "video") this.regularDefinitionUrl.toString() else "",
-                        isFavorite = false
-                    ))
-                is SaturnResult.Error -> SaturnResult.Error(regularPicture.e)
+            saturnPhotos.forEachIndexed { index, saturnPhoto ->
+                val media = listOfNotNull(
+                    SaturnPhotoMedia(
+                        saturnPhotoId = insertedIds[index],
+                        mediaType = if (saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
+                            else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE,
+                        url = if (saturnPhoto.isVideo) apodModelList[index].thumbnailUrl.toString()
+                            else apodModelList[index].regularDefinitionUrl.toString(),
+                        filepath = "",
+                        status = SaturnPhotoMediaStatus.NOT_DOWNLOADED_YET,
+                        errorMessage = ""
+                    ),
+                    if (!saturnPhoto.isVideo) SaturnPhotoMedia(
+                        saturnPhotoId = insertedIds[index],
+                        mediaType = SaturnPhotoMediaType.HIGH_QUALITY_IMAGE,
+                        url = apodModelList[index].highDefinitionUrl.toString(),
+                        filepath = "",
+                        status = SaturnPhotoMediaStatus.NOT_DOWNLOADED_YET,
+                        errorMessage = ""
+                    ) else null
+                )
+                saturnPhotoMediaDao.insert(*media.toTypedArray())
             }
-        } catch (e: Exception) {
-            SaturnResult.Error(e)
+            saturnPhotoDao.getSaturnPhotosWithMediaById(insertedIds)
         }
-
     }
 
-    private suspend fun downloadHQMedia(){
-        val saturnPhotosWithNoHQ = saturnPhotoDao.getAllSaturnPhotos().filter {
-            it.mediaType == "image" && it.highDefinitionPath == ""
-        }
-        //Updating one by one so we don´t lose any photo path
-        saturnPhotosWithNoHQ.forEach {
-            val savePictureResult = fileManager.savePicture(
-                apodService.downloadPhoto(it.highDefinitionUrl),
-                it.timestamp.toInstant().toCommonFormat()
+    private suspend fun downloadMediaAndUpdate(
+        saturnPhotosWithMedia: List<SaturnPhotoWithMedia>,
+        quality: MediaQuality? = null
+    ) {
+        val mediaTypes = when (quality) {
+            MediaQuality.NORMAL -> listOf(
+                SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE,
+                SaturnPhotoMediaType.VIDEO
             )
-            when(savePictureResult) {
+            MediaQuality.HIGH -> listOf(SaturnPhotoMediaType.HIGH_QUALITY_IMAGE)
+            else -> listOf(
+                SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE,
+                SaturnPhotoMediaType.VIDEO,
+                SaturnPhotoMediaType.HIGH_QUALITY_IMAGE
+            )
+        }
+
+        withContext(Dispatchers.IO) {
+            saturnPhotosWithMedia.sortedByDescending { it.saturnPhoto.timestamp }.forEach {
+                saturnPhotoWithMedia ->
+
+                val mediaToDownload = saturnPhotoWithMedia.mediaList
+                    .filter { mediaTypes.contains(it.mediaType)
+                            && it.status != SaturnPhotoMediaStatus.DOWNLOADED
+                    }
+                mediaToDownload.forEach {
+                    it.downloadMedia(saturnPhotoWithMedia.saturnPhoto)
+                }
+                //update progress
+                _saturnPhotoOperation.emit(
+                    RefreshOperationStatus.OperationInProgress(
+                        (saturnPhotosWithMedia.indexOf(saturnPhotoWithMedia) + 1) * 100 / saturnPhotosWithMedia.size.toDouble()
+                    )
+                )
+                _saturnPhotosFlow.emit(saturnPhotoWithMedia)
+            }
+        }
+    }
+
+    private suspend fun SaturnPhotoMedia.downloadMedia(saturnPhoto: SaturnPhoto){
+        try {
+            val prefix = when(this.mediaType) {
+                SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE -> "RQ-"
+                SaturnPhotoMediaType.HIGH_QUALITY_IMAGE -> "HQ-"
+                SaturnPhotoMediaType.VIDEO -> "VT-"
+            }
+            val regularByteReadChannel = apodService.downloadPhoto(this.url)
+            val savedPicture = fileManager.savePicture(
+                regularByteReadChannel,
+                prefix+saturnPhoto.timestamp.toInstant().toCommonFormat()
+            )
+            when(savedPicture){
                 is SaturnResult.Success -> {
-                    saturnPhotoDao.updateSaturnPhoto(it.copy(highDefinitionPath = savePictureResult.data))
+                    this.filepath = savedPicture.data
+                    this.status = SaturnPhotoMediaStatus.DOWNLOADED
                 }
                 is SaturnResult.Error -> {
-                    saturnLogger.logError(TAG, savePictureResult.e, savePictureResult.e.message.toString())
+                    this.status = SaturnPhotoMediaStatus.ERROR
+                    this.errorMessage = savedPicture.e.message.toString()
                 }
             }
+        } catch (e: Exception) {
+            this.status = SaturnPhotoMediaStatus.ERROR
+            this.errorMessage = e.message.toString()
+        } finally {
+            saturnPhotoMediaDao.update(this)
         }
+    }
+
+    private suspend fun SaturnPhotoMedia.deleteMedia(){
+        try {
+            withContext(Dispatchers.IO){
+                fileManager.deletePicture(this@deleteMedia.filepath)
+            }
+            filepath = ""
+            status = SaturnPhotoMediaStatus.DELETED
+        } catch (e: Exception) {
+            errorMessage = e.message.toString()
+        } finally {
+            saturnPhotoMediaDao.update(this)
+        }
+    }
+
+    private fun ApodModel.toSaturnPhoto(): SaturnPhoto {
+        return SaturnPhoto(
+            timestamp = this.date.toString().toInstant("yyyy-MM-dd").toEpochMilliseconds(),
+            title = this.title.toString(),
+            description = this.explanation.toString(),
+            authors = this.author.toString(),
+            isVideo = this.mediaType == "video",
+            videoUrl = if(this.mediaType == "video") this.regularDefinitionUrl.toString() else "",
+            isFavorite = false
+        )
     }
 
     companion object {
         private const val TAG = "SATURN REPOSITORY"
+    }
+    enum class PopulateOperationStatus {
+        Succeeded, AlreadyPopulated
     }
 }

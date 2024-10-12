@@ -47,7 +47,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
 import com.amontdevs.saturnwallpapers.model.MediaQuality
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
 import com.amontdevs.saturnwallpapers.model.WallpaperScreen
+import com.amontdevs.saturnwallpapers.model.getMedia
 import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getDownload
 import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getDownloadHigh
 import com.amontdevs.saturnwallpapers.resources.GalleryBottomMenu.getDownloadNormal
@@ -105,6 +107,7 @@ fun BottomSheetContent(
     onDismiss: () -> Unit = {}
 ){
     val wallpaperBottomSheetState = wallpaperBottomSheetStateFlow.collectAsStateWithLifecycle()
+    val isHQAvailable = wallpaperBottomSheetState.value.saturnPhoto.getMedia(SaturnPhotoMediaType.HIGH_QUALITY_IMAGE) != null
     if(wallpaperBottomSheetState.value.displayToast){
         Toast.makeText(
             LocalContext.current,
@@ -169,7 +172,7 @@ fun BottomSheetContent(
                 contentDescription = getDownloadNormal(),
                 isLoading = wallpaperBottomSheetState.value.isDownloadNormalLoading
             ) { onDownloadNormalClick() }
-            if (wallpaperBottomSheetState.value.saturnPhoto.highDefinitionPath != "") {
+            if (isHQAvailable) {
                 IconItemOption(
                     name = getDownloadHigh(),
                     drawableId =  R.drawable.ic_hq,

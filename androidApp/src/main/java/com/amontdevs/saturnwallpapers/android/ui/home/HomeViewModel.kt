@@ -24,11 +24,7 @@ class HomeViewModel(
     private val _homeState = MutableStateFlow(HomeState())
     val homeState: StateFlow<HomeState> = _homeState
 
-    init {
-        loadHomeData()
-    }
-
-    private fun loadHomeData() {
+    fun loadHomeData() {
         viewModelScope.launch {
             val result = saturnPhotosRepository.getSaturnPhoto(timeProvider.getCurrentTime())
             when (result) {
@@ -44,7 +40,11 @@ class HomeViewModel(
         viewModelScope.launch {
             when (val result = saturnPhotosRepository.getAllSaturnPhotos()) {
                 is SaturnResult.Success -> {
-                    _homeState.value = _homeState.value.copy(favoritePhotos = result.data.filter { it.isFavorite })
+                    _homeState.value = _homeState.value.copy(
+                        favoritePhotos = result.data
+                            .filter { it.saturnPhoto.isFavorite }
+                            .sortedByDescending { it.saturnPhoto.timestamp }
+                    )
                     Log.d("HomeViewModel", "Updated favorites photos")
                 }
                 is SaturnResult.Error -> {
@@ -55,7 +55,23 @@ class HomeViewModel(
         viewModelScope.launch {
             when (val result = settingsRepository.getSettings()) {
                 is SaturnResult.Success -> {
-                    if (result.data.isDailyWallpaperActivated) WorkerHelper.setWorker(workManager)
+                    if (result.data.isDailyWallpaperActivated) {
+                        WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DAILY_WORKER)
+                    }
+                }
+                is SaturnResult.Error -> {
+                    Log.d("HomeViewModel", "Error: ${result.e}")
+                }
+            }
+        }
+        viewModelScope.launch {
+            when (val result = saturnPhotosRepository.areDownloadsNeeded()) {
+                is SaturnResult.Success -> {
+                    if (result.data) {
+                        WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)
+                    } else {
+                        Log.d("HomeViewModel", "Not downloads needed")
+                    }
                 }
                 is SaturnResult.Error -> {
                     Log.d("HomeViewModel", "Error: ${result.e}")

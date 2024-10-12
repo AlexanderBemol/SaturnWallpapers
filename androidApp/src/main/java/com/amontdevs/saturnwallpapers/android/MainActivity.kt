@@ -153,7 +153,7 @@ fun AppContent(navController: NavHostController) {
                         it.arguments?.getBoolean("isFavoriteState")?.let { isFavoriteState ->
                             GalleryScreen(
                                 navController,
-                                koinViewModel(parameters = { parametersOf(isFavoriteState) }),
+                                koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context), isFavoriteState) }),
                                 this@SharedTransitionLayout,
                                 this@composable
                             )
@@ -173,11 +173,11 @@ fun AppContent(navController: NavHostController) {
                         //enterTransition = { fadeInScaleIn() },
                         //exitTransition = { fadeOutScaleOut() },
                         arguments = listOf(navArgument("photoId"){
-                            type = NavType.IntType
+                            type = NavType.LongType
                             defaultValue = 0
                         })
                     ){
-                        it.arguments?.getInt("photoId")?.let { photoId ->
+                        it.arguments?.getLong("photoId")?.let { photoId ->
                             FullPictureViewScreen(
                                 navController,
                                 koinViewModel(parameters = { parametersOf(photoId) }),

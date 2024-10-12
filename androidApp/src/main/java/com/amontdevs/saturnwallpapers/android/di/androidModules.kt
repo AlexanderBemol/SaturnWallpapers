@@ -13,7 +13,7 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val viewModelModules = module {
-    viewModel { params -> GalleryViewModel(get(), params.get()) }
+    viewModel { params -> GalleryViewModel(get(),params.get(), params.get()) }
     viewModel { StartingViewModel(get()) }
     viewModel { params -> HomeViewModel(get(), get(), get(), params.get()) }
     viewModel { params -> PhotoDetailViewModel(get(), get(), params.get()) }
