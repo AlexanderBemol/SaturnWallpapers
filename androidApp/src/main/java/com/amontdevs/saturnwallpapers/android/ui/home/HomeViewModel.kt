@@ -62,7 +62,20 @@ class HomeViewModel(
                     if (result.data.isDailyWallpaperActivated) {
                         WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DAILY_WORKER)
                     }
-                    WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)
+                }
+                is SaturnResult.Error -> {
+                    Log.d("HomeViewModel", "Error: ${result.e}")
+                }
+            }
+        }
+        viewModelScope.launch {
+            when (val result = saturnPhotosRepository.areDownloadsNeeded()) {
+                is SaturnResult.Success -> {
+                    if (result.data) {
+                        WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)
+                    } else {
+                        Log.d("HomeViewModel", "Not downloads needed")
+                    }
                 }
                 is SaturnResult.Error -> {
                     Log.d("HomeViewModel", "Error: ${result.e}")

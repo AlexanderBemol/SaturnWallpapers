@@ -1,13 +1,17 @@
 package com.amontdevs.saturnwallpapers.android.ui.settings
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper
+import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper.Companion.isWorkerRunning
 import com.amontdevs.saturnwallpapers.model.DataMaxAge
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
+import com.amontdevs.saturnwallpapers.model.RefreshOperationStatus
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.model.SaturnSettings
 import com.amontdevs.saturnwallpapers.model.SettingsMenuOptions
@@ -27,6 +31,8 @@ class SettingsViewModel(
     private val _settingsState = MutableStateFlow(SettingsState())
     val settingsState: StateFlow<SettingsState> = _settingsState
 
+    lateinit var progressLiveData: LiveData<WorkInfo>
+
     private var settingsToConfirm = settingsState.value.settings
 
     init {
@@ -41,6 +47,11 @@ class SettingsViewModel(
             is SaturnResult.Error -> {
                 Log.e("SettingsViewModel", "Error loading settings: ${result.e}")
             }
+        }
+        if (isWorkerRunning(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)) {
+            _settingsState.value = _settingsState.value.copy(
+                listeningState = ListeningState.START_LISTENING
+            )
         }
     }
 
@@ -148,12 +159,62 @@ class SettingsViewModel(
 
     fun confirmQualityChangeOperation() {
         viewModelScope.launch {
-            WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)
+            if(settingsToConfirm.mediaQuality == MediaQuality.HIGH){
+                when(val result = saturnPhotosRepository.areDownloadsNeeded()){
+                    is SaturnResult.Success -> {
+                        if(result.data){
+                            _settingsState.value = _settingsState.value.copy(
+                                listeningState = ListeningState.START_LISTENING
+                            )
+                        } else {
+                            _settingsState.value = _settingsState.value.copy(
+                                listeningState = ListeningState.NOT_LISTENING
+                            )
+                            Log.d("SettingsViewModel", "No downloads needed")
+                        }
+                    }
+                    is SaturnResult.Error -> {
+                        Log.e("SettingsViewModel", "Error checking if downloads are needed: ${result.e}")
+                    }
+                }
+            } else {
+                when(val result = saturnPhotosRepository.deleteHighQualityPhotos()){
+                    is SaturnResult.Success -> {
+                        _settingsState.value = _settingsState.value.copy(
+                            listeningState = ListeningState.NOT_LISTENING
+                        )
+                        Log.d("SettingsViewModel", "High quality photos deleted")
+                    }
+                    is SaturnResult.Error -> {
+                        Log.e(
+                            "SettingsViewModel",
+                            "Error deleting high quality photos: ${result.e}"
+                        )
+                    }
+                }
+            }
+
             _settingsState.value = _settingsState.value.copy(
                 confirm = ConfirmState(display = false)
             )
             saveDropDownOption(settingsToConfirm)
         }
+    }
+
+    fun startListeningToDownloadState() {
+        val workId = WorkerHelper.setWorker(workManager, WorkerHelper.SaturnWorker.DOWNLOADER_WORKER)
+        if (workId != null) {
+            progressLiveData = workManager.getWorkInfoByIdLiveData(workId)
+        }
+        _settingsState.value = _settingsState.value.copy(
+            listeningState = ListeningState.KEEP_LISTENING
+        )
+    }
+
+    fun stopListeningToDownloadState() {
+        _settingsState.value = _settingsState.value.copy(
+            listeningState = ListeningState.NOT_LISTENING
+        )
     }
 
     fun cancelSettingChangeOperation() {

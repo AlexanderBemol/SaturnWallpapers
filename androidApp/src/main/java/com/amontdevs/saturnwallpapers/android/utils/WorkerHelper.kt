@@ -3,6 +3,7 @@ package com.amontdevs.saturnwallpapers.android.utils
 import android.util.Log
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.ListenableWorker
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
@@ -12,21 +13,22 @@ import androidx.work.WorkManager
 import com.amontdevs.saturnwallpapers.android.services.PhotoDownloaderWorker
 import com.amontdevs.saturnwallpapers.android.services.SaturnDailyWorker
 import com.amontdevs.saturnwallpapers.resources.SaturnConstants
+import java.util.UUID
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.toJavaDuration
 
 class WorkerHelper {
     companion object {
-        fun setWorker(workManager: WorkManager, worker: SaturnWorker) {
+        fun setWorker(workManager: WorkManager, worker: SaturnWorker): UUID? {
             val workInfo = workManager.getWorkInfosForUniqueWork(worker.workerId)
             val scheduledStates = listOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING, WorkInfo.State.BLOCKED)
 
             //Schedule only if there is no scheduled work
-            if (workInfo.get().none { scheduledStates.contains(it.state) }) {
-                val constraints = Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
+            return if (workInfo.get().none { scheduledStates.contains(it.state) }) {
                 try {
+                    val constraints = Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build()
                     when(worker){
                         SaturnWorker.DAILY_WORKER -> {
                             val periodicWorkRequest =
@@ -37,25 +39,34 @@ class WorkerHelper {
                                     .build()
 
                             workManager.enqueueUniquePeriodicWork(
-                                SaturnConstants.WORKER_ID,
+                                worker.workerId,
                                 ExistingPeriodicWorkPolicy.KEEP,
                                 periodicWorkRequest
                             )
+                            Log.d("SaturnWorker", "Work scheduled")
+                            periodicWorkRequest.id
                         }
                         SaturnWorker.DOWNLOADER_WORKER -> {
                             val workRequest = OneTimeWorkRequestBuilder<PhotoDownloaderWorker>()
                                 .setConstraints(constraints)
                                 .build()
-                            workManager.enqueue(workRequest)
+
+                            workManager.enqueueUniqueWork(
+                                worker.workerId,
+                                ExistingWorkPolicy.KEEP,
+                                workRequest
+                            )
+                            Log.d("SaturnWorker", "Work scheduled")
+                            workRequest.id
                         }
                     }
-                    Log.d("SaturnWorker", "Work scheduled")
                 } catch (e: Exception) {
                     Log.d("SaturnWorker", "Failed to schedule work: ${e.message}")
+                    null
                 }
-
             } else {
                 Log.d("SaturnWorker", "Work already scheduled")
+                workInfo.get()[0].id
             }
         }
 
@@ -66,6 +77,12 @@ class WorkerHelper {
             } catch (e: Exception) {
                 Log.d("SaturnWorker", "Failed to cancel work: ${e.message}")
             }
+        }
+
+        fun isWorkerRunning(workManager: WorkManager, worker: SaturnWorker): Boolean {
+            val workInfo = workManager.getWorkInfosForUniqueWork(worker.workerId)
+            val scheduledStates = listOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING, WorkInfo.State.BLOCKED)
+            return workInfo.get().any { scheduledStates.contains(it.state) }
         }
     }
 

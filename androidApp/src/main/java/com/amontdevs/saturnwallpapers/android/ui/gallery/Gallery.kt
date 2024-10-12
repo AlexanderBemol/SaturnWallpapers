@@ -267,16 +267,15 @@ fun GalleryGrid(
                 Log.d("Gallery", "Opening: ${saturnPhoto.saturnPhoto.id}")
             }
         }
-        repeat(4){
-            item {
-                if (isFetchingPhotos) {
+        if (isFetchingPhotos) {
+            repeat(4){
+                item {
                     CircularProgressIndicator(
                         modifier = Modifier.padding(64.dp)
                     )
                 }
             }
         }
-
     }
     if (openBottomSheet) {
         BottomSheetOptions(
