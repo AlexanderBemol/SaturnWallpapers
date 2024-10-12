@@ -143,6 +143,7 @@ class SaturnPhotosRepository(
 
     override suspend fun refresh(): SaturnResult<Unit> {
         return try {
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress())
             //remove old data
             pruneOldData()
             //new data to download
@@ -156,6 +157,7 @@ class SaturnPhotosRepository(
             if(today.minus(lastSavedPhoto) >= 1.days) {
                 downloadDaysOfData(lastSavedPhoto.plus(1.days),today)
             }
+            _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
             SaturnResult.Success(Unit)
         } catch (e: Exception) {
             SaturnResult.Error(e)
@@ -212,11 +214,13 @@ class SaturnPhotosRepository(
             DataMaxAge.SIX_MONTHS -> currentTime.minus(180.days)
             DataMaxAge.ONE_YEAR -> currentTime.minus(365.days)
         }
-        /*
-        saturnPhotoDao.findOldData(validOldestData.toEpochMilliseconds()).forEach {
-            if(it.regularPath.isNotEmpty()) fileManager.deletePicture(it.regularPath)
-            if(it.highDefinitionPath.isNotEmpty()) fileManager.deletePicture(it.highDefinitionPath)
-        }*/
+        val dataToDelete = saturnPhotoDao.findOldData(validOldestData.toEpochMilliseconds())
+        dataToDelete.forEach {
+            it.mediaList.forEach { media ->
+                media.deleteMedia()
+            }
+            saturnPhotoMediaDao.delete(*it.mediaList.toTypedArray())
+        }
         saturnPhotoDao.deleteOldData(validOldestData.toEpochMilliseconds())
     }
 
