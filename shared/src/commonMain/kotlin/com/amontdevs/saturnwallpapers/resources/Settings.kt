@@ -48,7 +48,7 @@ object Settings {
 
     @OptIn(ExperimentalResourceApi::class)
     @Composable
-    fun getSettingsDownloadOverCellularDescription() = if (LocalInspectionMode.current) "When activated, the app is going to download images when the device is not connected to the internet, be careful, images can be huge."
+    fun getSettingsDownloadOverCellularDescription() = if (LocalInspectionMode.current) "When activated, the app is going to download images when the device is not connected to a WiFi network, be careful, images can be huge."
         else stringResource(Res.string.settings_download_over_cellular_description)
 
     @OptIn(ExperimentalResourceApi::class)

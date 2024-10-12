@@ -163,9 +163,13 @@ fun SettingsScreen(
                                 }
                             }
                         )
-                        DownloadsOverCellularOption(
-                            isChecked = settingsState.value.settings.isDownloadOverCellularActivated,
-                            onCheckedChange = onDownloadOverCellularChanged
+                        DefaultDateOption(
+                            defaultSaturnPhoto = settingsState.value.settings.defaultSaturnPhoto,
+                            onIndexChanged = {
+                                if (it != settingsState.value.settings.defaultSaturnPhoto.id){
+                                    onDropDownIndexChanged(DefaultSaturnPhoto.fromInt(it))
+                                }
+                            }
                         )
                         QualityOption(
                             downloadingProgress,
@@ -176,19 +180,15 @@ fun SettingsScreen(
                                 }
                             }
                         )
+                        DownloadsOverCellularOption(
+                            isChecked = settingsState.value.settings.isDownloadOverCellularActivated,
+                            onCheckedChange = onDownloadOverCellularChanged
+                        )
                         MaxAgeOption(
                             dataMaxAge = settingsState.value.settings.dataMaxAge,
                             onIndexChanged = {
                                 if (it != settingsState.value.settings.dataMaxAge.id){
                                     onDropDownIndexChanged(DataMaxAge.fromInt(it))
-                                }
-                            }
-                        )
-                        DefaultDateOption(
-                            defaultSaturnPhoto = settingsState.value.settings.defaultSaturnPhoto,
-                            onIndexChanged = {
-                                if (it != settingsState.value.settings.defaultSaturnPhoto.id){
-                                    onDropDownIndexChanged(DefaultSaturnPhoto.fromInt(it))
                                 }
                             }
                         )
@@ -379,7 +379,6 @@ fun DefaultDateOption(
         }
     }
     OptionRow(
-        addDivider = false,
         optionExplanation = Settings.getSettingsDefaultPhotoDescription()
     ) {
         OptionDropDown(
