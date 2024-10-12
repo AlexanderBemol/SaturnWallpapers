@@ -21,7 +21,6 @@ class StartingViewModel(
 
     private val _startingState = MutableStateFlow(StartingState())
     val startingState = _startingState.asStateFlow()
-    private val stepSize: Int = (100 / DAYS_OF_DATA.inWholeDays).toInt()
 
     init {
         initialize()
@@ -29,9 +28,8 @@ class StartingViewModel(
 
     private fun initialize() {
         viewModelScope.launch {
-            saturnPhotosRepository.saturnPhotosFlow.collect {
-                val newProgress = _startingState.value.progress + stepSize
-                _startingState.value = _startingState.value.copy(progress = newProgress)
+            saturnPhotosRepository.saturnPhotoOperation.collect {
+                _startingState.value = _startingState.value.copy(progress = it.progress.toInt())
                 Log.d("StartingViewModel", "Flow: $it")
             }
         }

@@ -68,13 +68,13 @@ class SaturnPhotosRepository(
     override suspend fun populate(): SaturnResult<PopulateOperationStatus> {
         return try {
             if(!saturnSettings.isAlreadyPopulated()) {
-                _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress())
+                _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress(0.00))
                 val daysOfData = SaturnConfig.DAYS_OF_DATA - 1.days
                 val today = timeProvider.getCurrentTime()
                 val startDate = timeProvider.getCurrentTime().minus(daysOfData)
                 downloadDaysOfData(startDate, today)
                 saturnSettings.setAlreadyPopulated()
-                _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
+                _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished(100.00))
                 SaturnResult.Success(PopulateOperationStatus.Succeeded)
             } else SaturnResult.Success(PopulateOperationStatus.AlreadyPopulated)
         } catch (e: Exception) {
@@ -247,7 +247,7 @@ class SaturnPhotosRepository(
                         saturnPhotoId = insertedIds[index],
                         mediaType = SaturnPhotoMediaType.HIGH_QUALITY_IMAGE,
                         url = apodModelList[index].highDefinitionUrl.toString(),
-                        filepath = "HQ-",
+                        filepath = "",
                         status = SaturnPhotoMediaStatus.NOT_DOWNLOADED_YET,
                         errorMessage = ""
                     ) else null
