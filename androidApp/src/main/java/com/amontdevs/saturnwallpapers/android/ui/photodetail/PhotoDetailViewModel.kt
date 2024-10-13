@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 class PhotoDetailViewModel(
     private val saturnPhotosRepository: ISaturnPhotosRepository,
     private val settingsRepository: ISettingsRepository,
-    private val photoId: Long
+    private val photoId: Long,
+    private val sharedImageKey: String
 ): ViewModel() {
     private val _fullViewState = MutableStateFlow(PhotoDetailState())
     val fullViewState: StateFlow<PhotoDetailState> = _fullViewState
@@ -28,7 +29,8 @@ class PhotoDetailViewModel(
             when (val result = saturnPhotosRepository.getSaturnPhoto(photoId)) {
                 is SaturnResult.Success -> {
                     _fullViewState.value = _fullViewState.value.copy(
-                        saturnPhoto = result.data
+                        saturnPhoto = result.data,
+                        sharedKey = sharedImageKey
                     )
                 }
                 is SaturnResult.Error -> {

@@ -30,7 +30,6 @@ class GalleryViewModel(
             _galleryState.value = _galleryState.value.copy(isLoaded = false)
             when(val result = saturnPhotosRepository.getAllSaturnPhotos()) {
                 is SaturnResult.Success -> {
-                    Log.d("GalleryViewModel", result.data.toString())
                     wholeSaturnList = result.data.sortedByDescending { it.saturnPhoto.timestamp }.toMutableList()
                     if(filterByFav) {
                         _galleryState.value = _galleryState.value.copy(

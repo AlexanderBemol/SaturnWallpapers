@@ -37,9 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -119,6 +117,7 @@ fun FullPictureViewScreen(
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
                 saturnPhotoWithMedia = photoDetailState.value.saturnPhoto!!,
+                sharedImageKey = photoDetailState.value.sharedKey,
                 goBack = navigateBack,
                 onFavoriteClick = onFavoriteClick,
                 onFullscreenClick = onFullscreenClick
@@ -156,6 +155,7 @@ fun ImageContainer(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     saturnPhotoWithMedia: SaturnPhotoWithMedia,
+    sharedImageKey: String,
     goBack: () -> Unit,
     onFavoriteClick: () -> Unit,
     onFullscreenClick: () -> Unit
@@ -174,7 +174,7 @@ fun ImageContainer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .sharedElement(
-                        sharedTransitionScope.rememberSharedContentState(key = "image-$saturnPhotoWithMedia.saturnPhoto.id"),
+                        sharedTransitionScope.rememberSharedContentState(key = sharedImageKey),
                         animatedVisibilityScope = animatedContentScope
                     )
             )

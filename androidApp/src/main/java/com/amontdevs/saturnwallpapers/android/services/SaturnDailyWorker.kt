@@ -42,7 +42,7 @@ class SaturnDailyWorker(
             val media = saturnPhotoToSet.getMedia(
                 when(settings.mediaQuality) {
                     MediaQuality.NORMAL -> SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
-                    MediaQuality.HIGH -> SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+                    MediaQuality.HIGH -> SaturnPhotoMediaType.HIGH_QUALITY_IMAGE
                 }
             )
             if (media != null) {
@@ -105,8 +105,10 @@ class SaturnDailyWorker(
             }
             is SaturnResult.Success -> {
                 val validPhotos = saturnPhotoResult.data.filter {!it.saturnPhoto.isVideo}
-                if (defaultPhoto == DefaultSaturnPhoto.RANDOM) validPhotos.random()
-                else validPhotos.filter { it.saturnPhoto.isFavorite }.random()
+                if (validPhotos.any{it.saturnPhoto.isFavorite} &&
+                    defaultPhoto == DefaultSaturnPhoto.RANDOM_BETWEEN_FAVORITES)
+                    validPhotos.filter { it.saturnPhoto.isFavorite }.random()
+                else validPhotos.random()
             }
         }
     }

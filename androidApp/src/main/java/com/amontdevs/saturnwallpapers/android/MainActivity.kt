@@ -120,7 +120,6 @@ fun AppContent(navController: NavHostController) {
                             }
                         }
                     ) {
-                        Log.d("AppContent", "Recomposing HomeScreen")
                         HomeScreen(
                             navController,
                             koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context)) }),
@@ -169,18 +168,24 @@ fun AppContent(navController: NavHostController) {
                         )
                     }
                     composable(
-                        Navigation.Details.title + "/{photoId}",
+                        Navigation.Details.title + "/{photoId},{sharedKey}",
                         //enterTransition = { fadeInScaleIn() },
                         //exitTransition = { fadeOutScaleOut() },
                         arguments = listOf(navArgument("photoId"){
                             type = NavType.LongType
                             defaultValue = 0
+                        }, navArgument("sharedKey"){
+                            type = NavType.StringType
+                            defaultValue = ""
                         })
                     ){
-                        it.arguments?.getLong("photoId")?.let { photoId ->
+                        val photoId = it.arguments?.getLong("photoId")
+                        val sharedKey = it.arguments?.getString("sharedKey")
+
+                        if(photoId != null && sharedKey != null) {
                             FullPictureViewScreen(
                                 navController,
-                                koinViewModel(parameters = { parametersOf(photoId) }),
+                                koinViewModel(parameters = { parametersOf(photoId, sharedKey) }),
                                 this@SharedTransitionLayout,
                                 this@composable
                             )

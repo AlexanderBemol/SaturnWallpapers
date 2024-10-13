@@ -27,6 +27,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
+import kotlinx.datetime.daysUntil
 import kotlin.time.Duration.Companion.days
 
 interface ISaturnPhotosRepository {
@@ -37,7 +38,7 @@ interface ISaturnPhotosRepository {
     suspend fun getSaturnPhoto(id: Long): SaturnResult<SaturnPhotoWithMedia>
     suspend fun getAllSaturnPhotos(): SaturnResult<List<SaturnPhotoWithMedia>>
     suspend fun updateSaturnPhoto(saturnPhoto: SaturnPhoto): SaturnResult<Unit>
-    suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhotoWithMedia>>
+    suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<Unit>
     suspend fun refresh(): SaturnResult<Unit>
     suspend fun areDownloadsNeeded(): SaturnResult<Boolean>
     suspend fun downloadNotDownloadedPhotos(): SaturnResult<Unit>
@@ -115,25 +116,53 @@ class SaturnPhotosRepository(
         }
     }
 
-    override suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<List<SaturnPhotoWithMedia>> {
+    override suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<Unit> {
         return try {
             _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress())
-            val olderSavedPhoto = Instant.fromEpochMilliseconds(
-                saturnPhotoDao.getAllSaturnPhotos()
-                    .map { it.saturnPhoto }
-                    .minByOrNull { it.timestamp }
+            val missingDays = getPendingDays(saturnPhotoDao.getAllSaturnPhotos(), daysOfData)
+            if (missingDays.isNotEmpty()) {
+                downloadDaysOfData(missingDays)
+            } else {
+                val olderSavedPhoto = Instant.fromEpochMilliseconds(
+                    saturnPhotoDao.getAllSaturnPhotos()
+                        .map { it.saturnPhoto }
+                        .minByOrNull { it.timestamp }
                     !!.timestamp
-            )
-            val newStartTime = olderSavedPhoto.minus(daysOfData.toInt().days)
-            val newEndTime = olderSavedPhoto.minus(1.days)
-            downloadDaysOfData(newStartTime, newEndTime)
-            val listOfSaturnPhotos = saturnPhotoDao
-                .getSaturnPhotos(newStartTime.toEpochMilliseconds(), newEndTime.toEpochMilliseconds())
+                )
+                val newStartTime = olderSavedPhoto.minus(daysOfData.toInt().days)
+                val newEndTime = olderSavedPhoto.minus(1.days)
+                downloadDaysOfData(newStartTime, newEndTime)
+            }
             _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
-            SaturnResult.Success(listOfSaturnPhotos)
+            SaturnResult.Success(Unit)
         } catch (e: Exception) {
             _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
             SaturnResult.Error(e)
+        }
+    }
+
+    private fun getPendingDays(allPhotos: List<SaturnPhotoWithMedia>, daysToGet: UInt): List<String> {
+        val today = timeProvider.getCurrentTime()
+        val lastSavedPhoto = allPhotos
+            .map { it.saturnPhoto }
+            .minByOrNull { it.timestamp }
+            ?.timestamp
+            ?.let { Instant.fromEpochMilliseconds(it) }
+            ?:today
+
+        val expectedDays = lastSavedPhoto.daysUntil(today, timeProvider.timeZone).let { days ->
+            if(days == 0) listOf(today.toCommonFormat(), lastSavedPhoto.toCommonFormat())
+            else {
+                (0..days).map {
+                    today.minus(it.days).toCommonFormat()
+                }
+            }
+        }
+        val currentDays = allPhotos.sortedByDescending { it.saturnPhoto.timestamp }
+            .map { it.saturnPhoto.timestamp.toInstant().toCommonFormat() }
+
+        return expectedDays.filterNot { currentDays.contains(it) }.take(daysToGet.toInt()).sortedBy {
+            it.toInstant("yyyy-MM-dd")
         }
     }
 
@@ -225,7 +254,13 @@ class SaturnPhotosRepository(
     private suspend fun downloadDaysOfData(startTime: Instant, endTime: Instant){
         val apodModelList = apodService.getPhotoOfDays(startTime.toCommonFormat(), endTime.toCommonFormat())
         val saturnPhotos = convertAndInsertApodModelList(apodModelList)
-        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL)
+        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL, true)
+    }
+
+    private suspend fun downloadDaysOfData(missingDays: List<String>){
+        val apodModelList = apodService.getPhotoOfDays(missingDays.first(), missingDays.last())
+        val saturnPhotos = convertAndInsertApodModelList(apodModelList)
+        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL, true)
     }
 
     private suspend fun convertAndInsertApodModelList(apodModelList: List<ApodModel>): List<SaturnPhotoWithMedia> {
@@ -262,7 +297,8 @@ class SaturnPhotosRepository(
 
     private suspend fun downloadMediaAndUpdate(
         saturnPhotosWithMedia: List<SaturnPhotoWithMedia>,
-        quality: MediaQuality? = null
+        quality: MediaQuality? = null,
+        publishPhotos: Boolean = false
     ) {
         val mediaTypes = when (quality) {
             MediaQuality.NORMAL -> listOf(
@@ -278,6 +314,7 @@ class SaturnPhotosRepository(
         }
 
         withContext(Dispatchers.IO) {
+            var i = 1
             saturnPhotosWithMedia.sortedByDescending { it.saturnPhoto.timestamp }.forEach {
                 saturnPhotoWithMedia ->
 
@@ -290,11 +327,12 @@ class SaturnPhotosRepository(
                 }
                 //update progress
                 _saturnPhotoOperation.emit(
-                    RefreshOperationStatus.OperationInProgress(
-                        (saturnPhotosWithMedia.indexOf(saturnPhotoWithMedia) + 1) * 100 / saturnPhotosWithMedia.size.toDouble()
-                    )
+                    RefreshOperationStatus.OperationInProgress(i * 100 / saturnPhotosWithMedia.size.toDouble())
                 )
-                _saturnPhotosFlow.emit(saturnPhotoWithMedia)
+                if(publishPhotos){
+                    _saturnPhotosFlow.emit(saturnPhotoWithMedia)
+                }
+                i++
             }
         }
     }
