@@ -112,7 +112,7 @@ class GalleryViewModel(
         else filteredList.sortedByDescending { it.saturnPhoto.timestamp }
 
         _galleryState.value = _galleryState.value.copy(
-            saturnPhotos = orderedList,
+            saturnPhotos = orderedList.distinctBy { it.saturnPhoto.id } ,
             isLoaded = true,
             pendingPhotosToDownload = pendingPhotosToDownload
         )
