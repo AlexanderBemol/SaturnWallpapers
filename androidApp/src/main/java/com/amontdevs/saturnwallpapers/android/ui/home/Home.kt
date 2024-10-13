@@ -28,6 +28,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,7 +73,10 @@ fun HomeScreen(
     animatedContentScope: AnimatedContentScope
 ) {
     val openPicture = { photoId: String ->
-        navController.navigate(Navigation.Details.title + "/$photoId")
+        navController.navigate(Navigation.Details.title + "/$photoId,")
+    }
+    val openHomePicture = { photoId: String ->
+        navController.navigate(Navigation.Details.title + "/$photoId,home-today-")
     }
     val navigateToGalleryFavorites = {
         navController.navigate(Navigation.Gallery.title + "?isFavoriteState=true")
@@ -83,6 +88,7 @@ fun HomeScreen(
         viewModel,
         navigateToGallery = navigateToGalleryFavorites,
         openPicture = openPicture,
+        openHomePicture,
         sharedTransitionScope = sharedTransitionScope,
         animatedContentScope = animatedContentScope
     )
@@ -94,6 +100,7 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     navigateToGallery: () -> Unit,
     openPicture: (String) -> Unit,
+    openHomePicture: (String) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope
 ) {
@@ -109,7 +116,7 @@ fun HomeScreen(
                 homeState.value,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope
-            ) { openPicture(homeState.value.saturnPhoto?.saturnPhoto?.id.toString()) }
+            ) { openHomePicture(homeState.value.saturnPhoto?.saturnPhoto?.id.toString()) }
             Spacer(modifier = Modifier.height(16.dp))
             FavoritePhotos(
                 favoritesPhotos = homeState.value.favoritePhotos,
@@ -142,7 +149,10 @@ fun TodayData(
     Spacer(modifier = Modifier.height(16.dp))
     with(sharedTransitionScope) {
         homeState.saturnPhoto?.let { saturnPhoto ->
-            val saturnMedia = saturnPhoto.getMedia(SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE)
+            val saturnMedia = saturnPhoto.getMedia(
+                if (saturnPhoto.saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
+                else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+            )
             if (saturnMedia != null) {
                 SaturnImage(
                     filePath = saturnMedia.filepath,
@@ -213,7 +223,10 @@ fun FavoritePhotos(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(favoritesPhotos){
-                it.getMedia(SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE)?.let { media ->
+                it.getMedia(
+                    if (it.saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
+                    else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+                )?.let { media ->
                     FavoriteItem(
                         saturnPhoto = it.saturnPhoto,
                         saturnPhotoMedia = media,

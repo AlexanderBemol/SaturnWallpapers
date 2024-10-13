@@ -120,7 +120,6 @@ fun AppContent(navController: NavHostController) {
                             }
                         }
                     ) {
-                        Log.d("AppContent", "Recomposing HomeScreen")
                         HomeScreen(
                             navController,
                             koinViewModel(parameters = { parametersOf(WorkManager.getInstance(context)) }),
@@ -169,12 +168,15 @@ fun AppContent(navController: NavHostController) {
                         )
                     }
                     composable(
-                        Navigation.Details.title + "/{photoId}",
+                        Navigation.Details.title + "/{photoId},{previewPhoto}",
                         //enterTransition = { fadeInScaleIn() },
                         //exitTransition = { fadeOutScaleOut() },
                         arguments = listOf(navArgument("photoId"){
                             type = NavType.LongType
                             defaultValue = 0
+                        }, navArgument("previewPhoto"){
+                            type = NavType.StringType
+                            defaultValue = ""
                         })
                     ){
                         it.arguments?.getLong("photoId")?.let { photoId ->

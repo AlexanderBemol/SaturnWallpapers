@@ -174,7 +174,7 @@ fun ImageContainer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .sharedElement(
-                        sharedTransitionScope.rememberSharedContentState(key = "image-$saturnPhotoWithMedia.saturnPhoto.id"),
+                        sharedTransitionScope.rememberSharedContentState(key = "image-${saturnPhotoWithMedia.saturnPhoto.id}"),
                         animatedVisibilityScope = animatedContentScope
                     )
             )

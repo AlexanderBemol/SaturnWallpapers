@@ -225,7 +225,7 @@ class SaturnPhotosRepository(
     private suspend fun downloadDaysOfData(startTime: Instant, endTime: Instant){
         val apodModelList = apodService.getPhotoOfDays(startTime.toCommonFormat(), endTime.toCommonFormat())
         val saturnPhotos = convertAndInsertApodModelList(apodModelList)
-        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL)
+        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL, true)
     }
 
     private suspend fun convertAndInsertApodModelList(apodModelList: List<ApodModel>): List<SaturnPhotoWithMedia> {
@@ -262,7 +262,8 @@ class SaturnPhotosRepository(
 
     private suspend fun downloadMediaAndUpdate(
         saturnPhotosWithMedia: List<SaturnPhotoWithMedia>,
-        quality: MediaQuality? = null
+        quality: MediaQuality? = null,
+        publishPhotos: Boolean = false
     ) {
         val mediaTypes = when (quality) {
             MediaQuality.NORMAL -> listOf(
@@ -294,7 +295,9 @@ class SaturnPhotosRepository(
                         (saturnPhotosWithMedia.indexOf(saturnPhotoWithMedia) + 1) * 100 / saturnPhotosWithMedia.size.toDouble()
                     )
                 )
-                _saturnPhotosFlow.emit(saturnPhotoWithMedia)
+                if(publishPhotos){
+                    _saturnPhotosFlow.emit(saturnPhotoWithMedia)
+                }
             }
         }
     }

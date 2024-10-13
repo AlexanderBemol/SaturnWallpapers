@@ -83,7 +83,7 @@ fun GalleryScreen(
     animatedContentScope: AnimatedContentScope
 ) {
     val openPicture = { photoId: Long ->
-        navController.navigate(Navigation.Details.title + "/$photoId")
+        navController.navigate(Navigation.Details.title + "/$photoId,")
     }
     val onToggleFiltersVisibility = { viewModel.toggleFiltersVisibility() }
     val onSortAndFilter = { toggleAscSort: Boolean, toggleFilterByFav: Boolean ->
@@ -302,7 +302,10 @@ fun ImageItem(
     onClickMore: () -> Unit,
     onItemClick: (String) -> Unit
 ){
-    val saturnMedia = saturnPhoto.getMedia(SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE)
+    val saturnMedia = saturnPhoto.getMedia(
+        if(saturnPhoto.saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
+        else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+    )
     if (saturnMedia != null) {
         Column(
             modifier = modifier
