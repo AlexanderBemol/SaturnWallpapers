@@ -8,13 +8,14 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 
 interface ITimeProvider {
+    val timeZone: TimeZone
     fun getCurrentTime(): Instant
 }
 
 class TimeProvider(
     timezone: String
 ) : ITimeProvider {
-    private val timeZone = TimeZone.of(timezone)
+    override val timeZone = TimeZone.of(timezone)
     private val currentLocalDate: LocalDateTime
         get() = Clock.System.now().toLocalDateTime(timeZone)
 

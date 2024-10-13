@@ -73,10 +73,12 @@ fun HomeScreen(
     animatedContentScope: AnimatedContentScope
 ) {
     val openPicture = { photoId: String ->
-        navController.navigate(Navigation.Details.title + "/$photoId,")
+        val key = "image-$photoId"
+        navController.navigate(Navigation.Details.title + "/$photoId,$key")
     }
     val openHomePicture = { photoId: String ->
-        navController.navigate(Navigation.Details.title + "/$photoId,home-today-")
+        val key = "home-today-image-$photoId"
+        navController.navigate(Navigation.Details.title + "/$photoId,$key")
     }
     val navigateToGalleryFavorites = {
         navController.navigate(Navigation.Gallery.title + "?isFavoriteState=true")

@@ -180,10 +180,12 @@ fun SettingsScreen(
                                 }
                             }
                         )
+                        /*
                         DownloadsOverCellularOption(
                             isChecked = settingsState.value.settings.isDownloadOverCellularActivated,
                             onCheckedChange = onDownloadOverCellularChanged
                         )
+                        */
                         MaxAgeOption(
                             dataMaxAge = settingsState.value.settings.dataMaxAge,
                             onIndexChanged = {

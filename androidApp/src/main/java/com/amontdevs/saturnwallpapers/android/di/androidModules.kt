@@ -16,7 +16,7 @@ val viewModelModules = module {
     viewModel { params -> GalleryViewModel(get(),params.get(), params.get()) }
     viewModel { StartingViewModel(get()) }
     viewModel { params -> HomeViewModel(get(), get(), get(), params.get()) }
-    viewModel { params -> PhotoDetailViewModel(get(), get(), params.get()) }
+    viewModel { params -> PhotoDetailViewModel(get(), get(), params.get(), params.get()) }
     viewModel { params -> SettingsViewModel(get(), get(), params.get()) }
     viewModel { params -> WallpaperBottomSheetViewModel(get(), get(), get(), get(), params.get()) }
 }
