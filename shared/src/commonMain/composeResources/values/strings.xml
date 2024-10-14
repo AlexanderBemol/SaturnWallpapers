@@ -65,5 +65,11 @@
     <string name="settings_default_photo_option_random">Random</string>
     <string name="settings_default_photo_option_random_favorites">Random between favorites</string>
 
+    <string name="settings_quality_confirm_dialog_title">Are you sure?</string>
+    <string name="settings_quality_confirm_dialog_high_quality_message">All the images will be downloaded at high quality, this operation can take some time depending on your internet connection, do you want to continue?</string>
+    <string name="settings_quality_confirm_dialog_regular_quality_message">All the high quality images are going to be removed.</string>
+
+    <string name="settings_quality_confirm_high_quality_loading_title">Downloading high quality images</string>
+    <string name="settings_quality_confirm_regular_quality_loading_title">Removing high quality images</string>
 
 </resources>

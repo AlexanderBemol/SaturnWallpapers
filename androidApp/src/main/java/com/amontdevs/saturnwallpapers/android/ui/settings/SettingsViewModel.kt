@@ -18,6 +18,7 @@ import com.amontdevs.saturnwallpapers.model.SettingsMenuOptions
 import com.amontdevs.saturnwallpapers.model.WallpaperScreen
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import com.amontdevs.saturnwallpapers.repository.ISettingsRepository
+import com.amontdevs.saturnwallpapers.resources.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
