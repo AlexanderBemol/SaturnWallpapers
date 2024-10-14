@@ -25,17 +25,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,7 +45,6 @@ import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.model.DataMaxAge
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
-import com.amontdevs.saturnwallpapers.model.RefreshOperationStatus
 import com.amontdevs.saturnwallpapers.model.SettingsMenuOptions
 import com.amontdevs.saturnwallpapers.model.WallpaperScreen
 import com.amontdevs.saturnwallpapers.resources.Settings
@@ -115,18 +111,34 @@ fun SettingsScreen(
     onDialogDismiss: () -> Unit
 ){
     val settingsState = settingsStateFlow.collectAsState()
-    if (settingsState.value.confirm.display){
+    if (settingsState.value.dialogState != DialogState.HideDialog) {
+        val title = Settings.getSettingsQualityConfirmDialogTitle()
+        val message = when(settingsState.value.dialogState){
+            DialogState.ConfirmHighQuality -> Settings.getSettingsQualityConfirmDialogHighQualityMessage()
+            DialogState.ConfirmRegularQuality -> Settings.getSettingsQualityConfirmDialogRegularQualityMessage()
+            else -> ""
+        }
+        val loadingTitle = when(settingsState.value.dialogState){
+            DialogState.ConfirmHighQuality -> Settings.getSettingsQualityConfirmHighQualityLoadingTitle()
+            DialogState.ConfirmRegularQuality -> Settings.getSettingsQualityConfirmRegularQualityLoadingTitle()
+            else -> ""
+        }
+        val optionToConfirm = when(settingsState.value.dialogState){
+            DialogState.ConfirmHighQuality, DialogState.ConfirmRegularQuality -> onQualityDropDownDialogConfirm
+            DialogState.ConfirmCellular -> onDownloadOverCellularDialogConfirm
+            else -> {->}
+        }
         ConfirmDialogLoading(
-            title = settingsState.value.confirm.title,
-            description = settingsState.value.confirm.message,
-            onLoadingTitle = settingsState.value.confirm.loadingTitle,
-            onConfirm = when(settingsState.value.confirm.optionToConfirm){
-                OptionToConfirm.MediaQuality -> onQualityDropDownDialogConfirm
-                OptionToConfirm.DownloadOverCellular -> onDownloadOverCellularDialogConfirm
-            },
+            title = title,
+            description = message,
+            onLoadingTitle = loadingTitle,
+            confirmText = @Composable { Text(text = Settings.getDialogConfirmText()) },
+            dismissText = @Composable { Text(text = Settings.getDialogCancelText()) },
+            onConfirm = optionToConfirm,
             onDismiss = onDialogDismiss
         )
     }
+
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -324,7 +336,7 @@ fun QualityOption(
             if (downloadingProgress >= 0.0 && downloadingProgress < 99.0) {
                 Text(
                     style = MaterialTheme.typography.bodySmall,
-                    text = "Downloading: ${downloadingProgress.roundToInt()}%",
+                    text = Settings.getDownloadingText() + downloadingProgress.roundToInt() + "%",
                     modifier = Modifier.padding(top = 16.dp)
                 )
                 LinearProgressIndicator(

@@ -5,6 +5,8 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
 import saturnwallpapers.shared.generated.resources.Res
+import saturnwallpapers.shared.generated.resources.dialog_cancel_text
+import saturnwallpapers.shared.generated.resources.dialog_confirm_text
 import saturnwallpapers.shared.generated.resources.settings_daily_wallpaper_description
 import saturnwallpapers.shared.generated.resources.settings_daily_wallpaper_title
 import saturnwallpapers.shared.generated.resources.settings_default_photo_description
@@ -13,6 +15,7 @@ import saturnwallpapers.shared.generated.resources.settings_default_photo_option
 import saturnwallpapers.shared.generated.resources.settings_default_photo_title
 import saturnwallpapers.shared.generated.resources.settings_download_over_cellular_description
 import saturnwallpapers.shared.generated.resources.settings_download_over_cellular_title
+import saturnwallpapers.shared.generated.resources.settings_downloading
 import saturnwallpapers.shared.generated.resources.settings_max_age_description
 import saturnwallpapers.shared.generated.resources.settings_max_age_option_one_month
 import saturnwallpapers.shared.generated.resources.settings_max_age_option_one_year
@@ -159,5 +162,18 @@ object Settings {
     fun getSettingsQualityConfirmRegularQualityLoadingTitle() = if (LocalInspectionMode.current) "Removing high quality images"
         else stringResource(Res.string.settings_quality_confirm_regular_quality_loading_title)
 
+    @Composable
+    fun getDialogConfirmText() =
+        if (LocalInspectionMode.current) "Confirm"
+        else stringResource(Res.string.dialog_confirm_text)
 
+    @Composable
+    fun getDownloadingText() =
+        if (LocalInspectionMode.current) "Downloading"
+        else stringResource(Res.string.settings_downloading)
+
+    @Composable
+    fun getDialogCancelText() =
+        if (LocalInspectionMode.current) "Cancel"
+        else stringResource(Res.string.dialog_cancel_text)
 }

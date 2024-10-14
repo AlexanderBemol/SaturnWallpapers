@@ -4,7 +4,7 @@ import com.amontdevs.saturnwallpapers.model.SaturnSettings
 
 data class SettingsState(
     val settings: SaturnSettings = SaturnSettings(),
-    val confirm: ConfirmState = ConfirmState(),
+    val dialogState: DialogState = DialogState.HideDialog,
     val listeningState: ListeningState = ListeningState.NOT_LISTENING
 )
 
@@ -15,6 +15,10 @@ data class ConfirmState(
     val loadingTitle: String = "",
     val optionToConfirm: OptionToConfirm = OptionToConfirm.MediaQuality
 )
+
+enum class DialogState {
+    ConfirmHighQuality, ConfirmRegularQuality, ConfirmCellular, HideDialog
+}
 
 enum class OptionToConfirm {
     MediaQuality, DownloadOverCellular

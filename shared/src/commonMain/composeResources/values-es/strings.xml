@@ -71,4 +71,9 @@
     <string name="settings_quality_confirm_high_quality_loading_title">Descargando imágenes a alta calidad</string>
     <string name="settings_quality_confirm_regular_quality_loading_title">Removiendo imágenes de alta calidad</string>
 
+    <string name="settings_downloading">Descargando: </string>
+
+    <string name="dialog_confirm_text">Confirmar</string>
+    <string name="dialog_cancel_text">Cancelar</string>
+
 </resources>

@@ -72,4 +72,9 @@
     <string name="settings_quality_confirm_high_quality_loading_title">Downloading high quality images</string>
     <string name="settings_quality_confirm_regular_quality_loading_title">Removing high quality images</string>
 
+    <string name="settings_downloading">Downloading: </string>
+
+    <string name="dialog_confirm_text">Confirm</string>
+    <string name="dialog_cancel_text">Cancel</string>
+
 </resources>

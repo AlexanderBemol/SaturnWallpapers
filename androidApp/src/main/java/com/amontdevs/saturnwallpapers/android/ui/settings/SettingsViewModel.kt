@@ -11,14 +11,12 @@ import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper.Companion.isWor
 import com.amontdevs.saturnwallpapers.model.DataMaxAge
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
-import com.amontdevs.saturnwallpapers.model.RefreshOperationStatus
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.model.SaturnSettings
 import com.amontdevs.saturnwallpapers.model.SettingsMenuOptions
 import com.amontdevs.saturnwallpapers.model.WallpaperScreen
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import com.amontdevs.saturnwallpapers.repository.ISettingsRepository
-import com.amontdevs.saturnwallpapers.resources.Settings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -108,13 +106,7 @@ class SettingsViewModel(
         )
         if(settingsToConfirm.isDownloadOverCellularActivated) {
             _settingsState.value = _settingsState.value.copy(
-                confirm = ConfirmState(
-                    display = true,
-                    title = "Are you sure?",
-                    message = "Images download process can consume a lot of data if high quality is selected.",
-                    loadingTitle = "",
-                    optionToConfirm = OptionToConfirm.DownloadOverCellular
-                )
+                dialogState = DialogState.ConfirmCellular
             )
         } else {
             confirmDownloadOverCellular()
@@ -126,7 +118,7 @@ class SettingsViewModel(
             when(val result = settingsRepository.saveSettings(settingsToConfirm)){
                 is SaturnResult.Success -> {
                     _settingsState.value = _settingsState.value.copy(
-                        confirm = ConfirmState(display = false),
+                        dialogState = DialogState.HideDialog,
                         settings = settingsToConfirm
                     )
                 }
@@ -141,18 +133,8 @@ class SettingsViewModel(
         val settings = when(settingsMenuOption){
             is MediaQuality -> {
                 _settingsState.value = _settingsState.value.copy(
-                    confirm = ConfirmState(
-                        display = true,
-                        title = "Are you sure?",
-                        message = if(settingsMenuOption == MediaQuality.HIGH)
-                            "All the images will be downloaded at high quality, this operation can " +
-                                    "take some time depending on your internet connection, do you want to continue?"
-                        else "All the high quality images are going to be removed",
-                        loadingTitle = if(settingsMenuOption == MediaQuality.HIGH)
-                            "Downloading high quality images"
-                            else "Removing high quality images",
-                        optionToConfirm = OptionToConfirm.MediaQuality
-                    )
+                    dialogState = if(settingsMenuOption == MediaQuality.HIGH) DialogState.ConfirmHighQuality
+                    else DialogState.ConfirmRegularQuality
                 )
                 settingsToConfirm = settingsState.value.settings.copy(
                     mediaQuality = settingsMenuOption
@@ -213,7 +195,7 @@ class SettingsViewModel(
             }
 
             _settingsState.value = _settingsState.value.copy(
-                confirm = ConfirmState(display = false)
+                dialogState = DialogState.HideDialog
             )
             saveDropDownOption(settingsToConfirm)
         }
@@ -237,7 +219,7 @@ class SettingsViewModel(
 
     fun cancelSettingChangeOperation() {
         _settingsState.value = _settingsState.value.copy(
-            confirm = ConfirmState(display = false)
+            dialogState = DialogState.HideDialog
         )
     }
 

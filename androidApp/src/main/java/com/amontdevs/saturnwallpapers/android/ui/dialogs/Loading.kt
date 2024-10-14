@@ -24,6 +24,8 @@ fun ConfirmDialogLoading(
     description: String = "This action cannot be undone.",
     onLoadingTitle: String = "Loading",
     onLoadingDescription: String = "Please wait till the action is completed...",
+    confirmText: @Composable () -> Unit = {},
+    dismissText: @Composable () -> Unit = {},
     onDismiss: () -> Unit = {},
     onConfirm: () -> Unit = {}
 ) {
@@ -48,7 +50,7 @@ fun ConfirmDialogLoading(
         onDismissRequest = onDismiss,
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Cancel")
+                dismissText()
             }
         },
         confirmButton = {
@@ -57,7 +59,7 @@ fun ConfirmDialogLoading(
                     isLoading.value = true
                     onConfirm()
                 }) {
-                    Text(text = "Confirm")
+                    confirmText()
                 }
             }
         }
