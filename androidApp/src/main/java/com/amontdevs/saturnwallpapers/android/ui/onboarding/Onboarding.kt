@@ -372,7 +372,9 @@ fun OnboardingScreenLoading(
         )
         if (!LocalInspectionMode.current) {
             val preloaderLottieComposition by rememberLottieComposition(
-                LottieCompositionSpec.RawRes(R.raw.space_loading)
+                LottieCompositionSpec.RawRes(
+                    if (alreadyPopulated) R.raw.animation_rocket else R.raw.space_loading
+                )
             )
             val preloaderProgress by animateLottieCompositionAsState(
                 preloaderLottieComposition,
