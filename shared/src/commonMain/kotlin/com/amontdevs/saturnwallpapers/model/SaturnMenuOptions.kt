@@ -7,8 +7,8 @@ interface SettingsMenuOptions {
 enum class MediaQuality(
     override val id: Int
 ): SettingsMenuOptions {
-    NORMAL(0),
-    HIGH(1);
+    HIGH(0),
+    NORMAL(1);
     companion object {
         fun fromInt(value: Int) = entries.first { it.id == value }
     }

@@ -1,14 +1,23 @@
 package com.amontdevs.saturnwallpapers.utils
 
-import com.amontdevs.saturnwallpapers.model.DataMaxAge
-import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
-import com.amontdevs.saturnwallpapers.model.MediaQuality
-import com.amontdevs.saturnwallpapers.model.WallpaperScreen
-import io.realm.kotlin.types.RealmInstant
 import kotlinx.datetime.Instant
 
-fun Instant.toRealmInstant() = RealmInstant.from(this.epochSeconds,0)
+fun Long.toInstant() =
+    Instant.fromEpochMilliseconds(this)
 
-fun RealmInstant.toInstant() = Instant.fromEpochSeconds(this.epochSeconds)
+fun Instant.toDisplayableString() : String {
+    val formattedDate = this.formatDate("MMMM dd, yyyy")
+    return formattedDate[0].uppercase() + formattedDate.substring(1)
+}
+
+fun Instant.toShortDisplayableString() : String {
+    val formattedDate = this.formatDate("dd/MM/yyyy")
+    return formattedDate[0].uppercase() + formattedDate.substring(1)
+}
+
+fun Instant.toAPODUrl(): String {
+    val date = this.formatDate("yyMMdd")
+    return "https://apod.nasa.gov/apod/ap$date.html"
+}
 
 fun Instant.toCommonFormat() = this.formatDate("yyyy-MM-dd")

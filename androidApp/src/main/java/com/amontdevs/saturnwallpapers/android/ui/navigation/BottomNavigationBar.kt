@@ -1,39 +1,42 @@
 package com.amontdevs.saturnwallpapers.android.ui.navigation
 
-import android.util.Log
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.amontdevs.saturnwallpapers.android.MyApplicationTheme
+import com.amontdevs.saturnwallpapers.android.SaturnTheme
+import com.amontdevs.saturnwallpapers.resources.BottomNavMenu.getGallery
+import com.amontdevs.saturnwallpapers.resources.BottomNavMenu.getHome
+import com.amontdevs.saturnwallpapers.resources.BottomNavMenu.getSettings
 
 @Composable
 fun RowScope.AddItem(
-    screen: BottomNavItem,
+    screen: Navigation,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val title = when (screen) {
+        Navigation.Home -> getHome()
+        Navigation.Gallery -> getGallery()
+        Navigation.Settings -> getSettings()
+        else -> throw IllegalArgumentException("Invalid screen type")
+    }
+
     NavigationBarItem(
-        label = { Text(text = screen.title) },
+        label = { Text(text = title) },
         icon = {
                Icon(
                    painter = painterResource(id = screen.icon),
-                   contentDescription = screen.title)
+                   contentDescription = title)
         },
         selected = isSelected ,
         alwaysShowLabel = true,
@@ -44,9 +47,8 @@ fun RowScope.AddItem(
 @Composable
 fun BottomNavigation(
     navController: NavController = rememberNavController()
-)
-{
-    val items = listOf(BottomNavItem.Home, BottomNavItem.Gallery, BottomNavItem.Settings)
+) {
+    val items = listOf(Navigation.Home, Navigation.Gallery, Navigation.Settings)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route?.split("?")?.get(0)
 
@@ -72,7 +74,7 @@ fun BottomNavigation(
 @Preview
 @Composable
 fun BottomBarPreview() {
-    MyApplicationTheme {
+    SaturnTheme {
         Scaffold(
             bottomBar = {
                 BottomNavigation()

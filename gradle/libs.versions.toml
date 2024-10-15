@@ -1,28 +1,37 @@
 [versions]
 agp = "8.3.2"
 appcompat = "1.6.1"
-androidx-activityCompose = "1.9.0"
+androidx-activityCompose = "1.9.2"
+android-compose-compiler = "1.5.13"
 coilCompose = "2.6.0"
-compose = "1.6.6"
-compose-compiler = "1.5.10"
-compose-material3 = "1.2.1"
-coreKtx = "1.13.0"
+compose = "1.7.3"
+compose-material3 = "1.3.0"
+coreKtx = "1.13.1"
 coroutines = "1.7.3"
+crashlytics = "3.0.2"
 date-time = "0.5.0"
+firebase = "33.4.0"
+gms = "4.4.2"
 junit = "4.13.2"
 junitKtx = "1.1.5"
+kmp-compose-compiler = "1.6.11"
 koin = "3.2.0"
-kotlin = "1.9.22"
+kotlin = "1.9.23"
 ktor = "2.3.9"
+ksp = "1.9.23-1.0.20"
+lifecycle = "2.8.0"
+lottie = "6.4.1"
+mockk = "1.13.11"
 multiplatformSettings = "1.1.1"
-lifecycle = "2.7.0"
-navigation-compose = "2.7.7"
+navigation-compose = "2.8.2"
 paletteKtx = "1.0.0"
-realm = "1.11.0"
+performance = "1.4.2"
+room = "2.7.0-alpha09"
 serialization = "1.6.3"
-
-saturn-sdk = "0.0.1"
-
+sqlite = "2.5.0-alpha09"
+work = "2.9.1"
+roomCommon = "2.6.1"
+contentpager = "1.0.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -37,6 +46,11 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
 date-time = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "date-time" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase"}
+firebase-analytics = { module="com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module="com.google.firebase:firebase-crashlytics" }
+firebase-performance = { module="com.google.firebase:firebase-perf" }
+junit = { module = "junit:junit", version.ref="junit"}
 koin-core = { module = "io.insert-koin:koin-core", version.ref="koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref="koin" }
 koin-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref="koin" }
@@ -49,20 +63,29 @@ ktor-client-serialization = { module = "io.ktor:ktor-serialization-kotlinx-json"
 ktor-client-negotation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie"}
+mockk = { module="io.mockk:mockk", version.ref = "mockk" }
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 multiplatform-settings-noarg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref="navigation-compose"}
-realm-library = { module = "io.realm.kotlin:library-base", version.ref="realm" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref="room"}
+room-runtime = { module = "androidx.room:room-runtime", version.ref="room" }
 serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
-
-saturn-sdk = { module = "com.amontdevs:shared", version.ref="saturn-sdk" }
-saturn-sdk-android = { module = "com.amontdevs:shared-android", version.ref="saturn-sdk" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+work = { module = "androidx.work:work-runtime-ktx", version.ref = "work"}
+androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
+androidx-contentpager = { group = "androidx.contentpager", name = "contentpager", version.ref = "contentpager" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
+compose-kmp-compiler = { id = "org.jetbrains.compose", version.ref = "kmp-compose-compiler"}
+crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics"}
+gms = { id = "com.google.gms.google-services", version.ref = "gms"}
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"}
-realm = { id = "io.realm.kotlin", version.ref = "realm"}
+performance = { id = "com.google.firebase.firebase-perf", version.ref = "performance"}
+room = { id = "androidx.room", version.ref = "room" }

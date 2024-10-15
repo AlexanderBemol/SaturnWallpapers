@@ -1,0 +1,101 @@
+<resources>
+    <!--- Nav Bar Menu -->
+    <string name="menu_home">Home</string>
+    <string name="menu_gallery">Gallery</string>
+    <string name="menu_settings">Settings</string>
+
+    <!--- Home Screen -->
+    <string name="home_hello">Hello!</string>
+    <string name="home_favorites">Favorite photos</string>"
+
+    <!--- Gallery Screen -->
+    <string name="gallery_title">Gallery</string>
+    <string name="gallery_favorites">Favorites</string>
+
+    <!--- Gallery Bottom Menu -->
+    <string name="gallery_bottom_menu_set_wallpaper">Set wallpaper for...</string>
+    <string name="gallery_bottom_menu_set_wallpaper_lock">Lock screen</string>
+    <string name="gallery_bottom_menu_set_wallpaper_home">Home screen</string>
+    <string name="gallery_bottom_menu_set_wallpaper_both">Both screens</string>
+
+    <string name="gallery_bottom_menu_download">Download...</string>
+    <string name="gallery_bottom_menu_download_normal">Normal quality</string>
+    <string name="gallery_bottom_menu_download_high">High quality</string>
+    <!--- Details Screen -->
+    <string name="details_website_icon">Website</string>">
+    <string name="details_information_button">Information</string>">
+    <string name="details_download_button">Download</string>
+    <string name="details_favorite_button">Favorite</string>
+    <string name="details_back_button">Back</string>
+    <string name="details_set_wallpaper_button">Wallpaper options</string>
+    <string name="details_play_video_button">Play video</string>
+    <string name="details_read_more_button">Read more</string>
+    <string name="details_read_less_button">Read less</string>
+
+
+    <!--- Settings Screen -->
+    <string name="settings_title">Settings</string>
+
+    <string name="settings_daily_wallpaper_title">Daily wallpaper updater</string>
+    <string name="settings_daily_wallpaper_description">When activated, the app is going to automatically update the wallpaper everyday</string>
+
+    <string name="settings_download_over_cellular_title">Download over cellular</string>
+    <string name="settings_download_over_cellular_description">When activated, the app is going to download images when the device is not connected to a WiFi network, be careful, images can be huge.</string>
+
+    <string name="settings_wallpaper_screen_title">Wallpaper screen</string>
+    <string name="settings_wallpaper_screen_description">Define the screen where the wallpaper is going to automatically be set when the service is activated</string>
+    <string name="settings_wallpaper_screen_option_lock">Lock screen</string>
+    <string name="settings_wallpaper_screen_option_home">Home screen</string>
+    <string name="settings_wallpaper_screen_option_both">Both</string>
+
+    <string name="settings_quality_title">Quality</string>
+    <string name="settings_quality_description">Define the resolution of the images, the high quality requires more storage and network data</string>
+    <string name="settings_quality_option_medium">Medium</string>">
+    <string name="settings_quality_option_high">High</string>
+
+    <string name="settings_max_age_title">Max age of data</string>
+    <string name="settings_max_age_description">Define the maximum of time the images are going to be stored, after that, if a record is older (and is not a favorite) is going to be deleted.</string>
+    <string name="settings_max_age_option_one_month">One month</string>
+    <string name="settings_max_age_option_three_months">Three months</string>
+    <string name="settings_max_age_option_six_months">Six months</string>
+    <string name="settings_max_age_option_one_year">One year</string>
+
+    <string name="settings_default_photo_title">Default photo</string>
+    <string name="settings_default_photo_description">For some days, an image can not be retrieved, define if the app is going to take a random photo between your favorites, or a default one instead</string>
+    <string name="settings_default_photo_option_random">Random</string>
+    <string name="settings_default_photo_option_random_favorites">Random between favorites</string>
+
+    <string name="settings_quality_confirm_dialog_title">Are you sure?</string>
+    <string name="settings_quality_confirm_dialog_high_quality_message">All the images will be downloaded at high quality, this operation can take some time depending on your internet connection, do you want to continue?</string>
+    <string name="settings_quality_confirm_dialog_regular_quality_message">All the high quality images are going to be removed.</string>
+
+    <string name="settings_quality_confirm_high_quality_loading_title">Downloading high quality images</string>
+    <string name="settings_quality_confirm_regular_quality_loading_title">Removing high quality images</string>
+
+    <string name="settings_downloading">Downloading: </string>
+
+    <string name="dialog_confirm_text">Confirm</string>
+    <string name="dialog_cancel_text">Cancel</string>
+
+    <!--- Onboarding Screen -->
+    <string name="onboarding_next_button">Next</string>
+    <string name="onboarding_go_back_button">Go Back</string>
+    <string name="onboarding_get_started_button">Get Started</string>
+
+    <string name="onboarding_welcome_title">Welcome</string>
+    <string name="onboarding_welcome_description">Welcome to Saturn Wallpapers, your new favorite wallpapers app.</string>
+
+    <string name="onboarding_overview_title">Overview</string>
+    <string name="onboarding_overview_description">Everyday you'll get a new image from the NADA APOD service, explore the gallery, find your favorites, refresh your wallpaper or download them and share them with your friends.</string>
+
+    <string name="onboarding_configure_title">Configure</string>
+    <string name="onboarding_configure_description">You can activate the automatic service, if you do it, every day a new image is going to be set as your wallpaper, do you want to activate it?</string>
+    <string name="onboarding_configure_switch_description">Activate automatic service</string>
+
+    <string name="onboarding_loading_title">Almost there</string>
+    <string name="onboarding_loading_description">We are setting everything up for you, please wait a moment</string>
+
+    <string name="onboarding_done_title">We´re ready</string>
+    <string name="onboarding_done_description">Everything is ready, enjoy your new wallpapers!</string>
+
+</resources>

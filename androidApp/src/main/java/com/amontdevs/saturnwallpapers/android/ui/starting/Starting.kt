@@ -11,39 +11,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.amontdevs.saturnwallpapers.android.MyApplicationTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun StartingScreen(
-    startingViewModel: StartingViewModel,
+    startingViewModel: StartingViewModel = koinViewModel(),
     navigateToHome: () -> Unit,
-) {
-    StartingScreen(
-        startingStateFlow = startingViewModel.startingState,
-        navigateToHome = navigateToHome) {
-        startingViewModel.initialize()
-    }
-}
-
-@Composable
-fun StartingScreen(
-    startingStateFlow: StateFlow<StartingState>,
-    navigateToHome: () -> Unit,
-    initialize: () -> Unit,
-) {
-    LaunchedEffect(Unit) {
-        initialize()
-        Log.d("StartingScreen", "initialize")
-    }
-    val startingState = startingStateFlow.collectAsState()
-    if (startingState.value.isLoading) {
+){
+    val startingState by startingViewModel.startingState.collectAsStateWithLifecycle()
+    if (startingState.isLoading) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -51,28 +38,22 @@ fun StartingScreen(
         ) {
             CircularProgressIndicator()
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "${startingState.value.progress}%")
+            Text(text = "${startingState.progress}%")
             Text(text = "Loading...")
         }
     } else {
-        navigateToHome()
         Log.d("StartingScreen", "StartingScreen: navigateToHome")
-
+        navigateToHome()
     }
 }
 
 @Preview
 @Composable
 fun StartingScreenPreview(){
-    MyApplicationTheme(
+    SaturnTheme(
         isDarkTheme = true
     ) {
         Scaffold {
-            StartingScreen(
-                startingStateFlow = MutableStateFlow(StartingState()),
-                navigateToHome = {},
-                initialize = {}
-            )
             it
         }
     }

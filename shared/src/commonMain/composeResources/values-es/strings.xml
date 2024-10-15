@@ -1,0 +1,101 @@
+<resources>
+    <!--- Nav Bar Menu -->
+    <string name="menu_home">Inicio</string>
+    <string name="menu_gallery">Galería</string>
+    <string name="menu_settings">Ajustes</string>
+
+    <!--- Home Screen -->
+    <string name="home_hello">Hola!</string>
+    <string name="home_favorites">Fotos Favoritas</string>"
+
+    <!--- Gallery Screen -->
+    <string name="gallery_title">Galería</string>
+    <string name="gallery_favorites">Favoritos</string>
+
+    <!--- Gallery Bottom Menu -->
+    <string name="gallery_bottom_menu_set_wallpaper">Establecer fondo de pantalla para...</string>
+    <string name="gallery_bottom_menu_set_wallpaper_lock">Pantalla de bloqueo</string>
+    <string name="gallery_bottom_menu_set_wallpaper_home">Pantalla de inicio</string>
+    <string name="gallery_bottom_menu_set_wallpaper_both">Ambas pantallas</string>
+
+    <string name="gallery_bottom_menu_download">Descargar...</string>
+    <string name="gallery_bottom_menu_download_normal">Calidad Regular</string>
+    <string name="gallery_bottom_menu_download_high">Alta Calidad</string>
+    <!--- Details Screen -->
+    <string name="details_website_icon">Sitio Web</string>">
+    <string name="details_information_button">Información</string>">
+    <string name="details_download_button">Descargar</string>
+    <string name="details_favorite_button">Favorito</string>
+    <string name="details_back_button">Atrás</string>
+    <string name="details_set_wallpaper_button">Opciones de fondo de pantalla</string>
+    <string name="details_play_video_button">Reproducir vídeo</string>
+    <string name="details_read_more_button">Leer más</string>
+    <string name="details_read_less_button">Leer menos</string>
+
+
+    <!--- Settings Screen -->
+    <string name="settings_title">Ajustes</string>
+
+    <string name="settings_daily_wallpaper_title">Actualizar fondo de pantalla diariamente</string>
+    <string name="settings_daily_wallpaper_description">Cuando está activado, el fondo de pantalla se va a actualizar automáticamente cada día</string>
+    <string name="settings_download_over_cellular_title">Descargar imágenes usando datos móviles</string>
+    <string name="settings_download_over_cellular_description">Cuando está activado, se van a descargar las imágenes usando datos móviles, recuerda tener en cuenta el consumo de datos.</string>
+    <string name="settings_wallpaper_screen_title">Pantalla a establecer</string>
+    <string name="settings_wallpaper_screen_description">Define en qué pantalla se va a establecer el fondo de pantalla.</string>
+    <string name="settings_wallpaper_screen_option_lock">Pantalla de bloqueo</string>
+    <string name="settings_wallpaper_screen_option_home">Pantalla de inicio</string>
+    <string name="settings_wallpaper_screen_option_both">Ambas pantallas</string>
+
+    <string name="settings_quality_title">Calidad de imágenes</string>
+    <string name="settings_quality_description">Define la calidad de las imágenes que se van a descargar, la calidad más alta consume más ancho de banda y espacio de almacenamiento</string>
+    <string name="settings_quality_option_medium">Regular</string>">
+    <string name="settings_quality_option_high">Alta</string>
+
+    <string name="settings_max_age_title">Máximo de tiempo de almacenamiento</string>
+    <string name="settings_max_age_description">Define el tiempo máximo de almacenamiento de las imágenes en el dispositivo, las imágenes más antiguas (no favoritas) van a ser borradas.</string>
+    <string name="settings_max_age_option_one_month">Un mes</string>
+    <string name="settings_max_age_option_three_months">Tres meses</string>
+    <string name="settings_max_age_option_six_months">Seis meses</string>
+    <string name="settings_max_age_option_one_year">Un año</string>
+
+    <string name="settings_default_photo_title">Foto por defecto</string>
+    <string name="settings_default_photo_description">Algunos días contienen un vídeo en lugar de una imagen, en este caso, define cuál foto se va a mostrar por defecto.</string>
+    <string name="settings_default_photo_option_random">Aleatorio</string>
+    <string name="settings_default_photo_option_random_favorites">Aleatorio entre fotos favoritas</string>
+
+
+    <string name="settings_quality_confirm_dialog_title">¿Estás seguro?</string>
+    <string name="settings_quality_confirm_dialog_high_quality_message">Todas las imágenes van a ser descargadas a alta calidad, esta operación puede llevar un tiempo dependiendo de tu conexión a internet, ¿deseas continuar?</string>
+    <string name="settings_quality_confirm_dialog_regular_quality_message">Todas las imágenes de alta calidad van a ser removidas.</string>
+
+    <string name="settings_quality_confirm_high_quality_loading_title">Descargando imágenes a alta calidad</string>
+    <string name="settings_quality_confirm_regular_quality_loading_title">Removiendo imágenes de alta calidad</string>
+
+    <string name="settings_downloading">Descargando: </string>
+
+    <string name="dialog_confirm_text">Confirmar</string>
+    <string name="dialog_cancel_text">Cancelar</string>
+
+    <!--- Onboarding Screen -->
+
+    <string name="onboarding_next_button">Continuar</string>
+    <string name="onboarding_go_back_button">Regresar</string>
+    <string name="onboarding_get_started_button">Comenzar</string>
+
+    <string name="onboarding_welcome_title">Bienvenido</string>
+    <string name="onboarding_welcome_description">Bienvenido a Saturn Wallpapers, tu nueva aplicación favorita de fondos de pantalla.</string>
+
+    <string name="onboarding_overview_title">¿De qué se trata?</string>
+    <string name="onboarding_overview_description">Cada día encontrarás una nueva imagen proporcionada por un servicio de la NASA, explora la galería, encuentra tus imágenes favoritas, actualiza tu fondo de pantalla o descárgalas y compartelas con tus amigos.</string>
+
+    <string name="onboarding_configure_title">Configuración</string>
+    <string name="onboarding_configure_description">Puedes activar el servicio automático de cambio de fondo de pantalla, si lo haces, cada día se va a establecer una nueva imagen como tu fondo de pantalla, ¿deseas activarlo?</string>
+    <string name="onboarding_configure_switch_description">Activar servicio automático</string>
+
+    <string name="onboarding_loading_title">Casi terminado</string>
+    <string name="onboarding_loading_description">Estamos terminando tu configuración, por favor espera un momento</string>
+
+    <string name="onboarding_done_title">Estamos listos</string>
+    <string name="onboarding_done_description">Todo listo, ahora puedes comenzar a usar Saturn Wallpapers.</string>
+
+</resources>

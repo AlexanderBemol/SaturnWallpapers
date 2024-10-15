@@ -1,10 +1,12 @@
 package com.amontdevs.saturnwallpapers.android.ui.gallery
 
-import android.content.Context
 import android.util.Log
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,8 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -40,8 +40,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,32 +49,42 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.amontdevs.saturnwallpapers.model.SaturnPhoto
-import com.amontdevs.saturnwallpapers.android.MyApplicationTheme
+import com.amontdevs.saturnwallpapers.android.SaturnTheme
 import com.amontdevs.saturnwallpapers.android.R
-import com.amontdevs.saturnwallpapers.android.ui.dialogs.BottomSheetOptions
+import com.amontdevs.saturnwallpapers.android.ui.components.SaturnImage
+import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.BottomSheetOptions
+import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
-import com.amontdevs.saturnwallpapers.android.utils.toDisplayableString
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoMediaType
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
+import com.amontdevs.saturnwallpapers.model.getMedia
+import com.amontdevs.saturnwallpapers.resources.Gallery.getFavorites
+import com.amontdevs.saturnwallpapers.resources.Gallery.getTitle
+import com.amontdevs.saturnwallpapers.utils.toDisplayableString
+import com.amontdevs.saturnwallpapers.utils.toInstant
 import kotlinx.coroutines.flow.StateFlow
-import java.io.File
+import org.koin.androidx.compose.getKoin
+import org.koin.core.parameter.parametersOf
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GalleryScreen(
     navController: NavController,
-    viewModel: GalleryViewModel
+    viewModel: GalleryViewModel,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
-    val openPicture = { photoId: String -> navController
-        .navigate(Navigation.FULL_PICTURE.route + "/$photoId")
+    val openPicture = { photoId: Long ->
+        val key = "image-$photoId"
+        navController.navigate(Navigation.Details.title + "/$photoId,$key")
     }
     val onToggleFiltersVisibility = { viewModel.toggleFiltersVisibility() }
     val onSortAndFilter = { toggleAscSort: Boolean, toggleFilterByFav: Boolean ->
@@ -83,11 +93,15 @@ fun GalleryScreen(
     val onBottomScroll = {
         viewModel.onBottomScroll()
     }
+
     LaunchedEffect(Unit) {
         viewModel.loadData()
     }
+
     GalleryScreen(
         viewModel.galleryState,
+        sharedTransitionScope,
+        animatedContentScope,
         openPicture,
         onToggleFiltersVisibility,
         onSortAndFilter,
@@ -95,15 +109,19 @@ fun GalleryScreen(
     )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GalleryScreen(
     galleryStateFlow: StateFlow<GalleryState>,
-    onOpenPicture: (String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onOpenPicture: (Long) -> Unit,
     onToggleFiltersVisibility: () -> Unit,
     onSortAndFilter: (toggleAscSort: Boolean, toggleFilterByFav:Boolean) -> Unit,
     onBottomScroll: () -> Unit
 ){
-    val galleryState = galleryStateFlow.collectAsState()
+    Log.d("Gallery", "Gallery Screen")
+    val galleryState = galleryStateFlow.collectAsStateWithLifecycle()
     val lazyStaggeredGridState = rememberLazyStaggeredGridState()
     Surface(
         modifier = Modifier
@@ -118,7 +136,7 @@ fun GalleryScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Gallery",
+                    text = getTitle(),
                     style = MaterialTheme.typography.headlineMedium
                 )
                 IconButton(
@@ -135,13 +153,18 @@ fun GalleryScreen(
                 Chips(galleryState.value, onSortAndFilter)
             }
             Spacer(modifier = Modifier.height(8.dp))
-            GalleryGrid(
-                onOpenPicture,
-                galleryState.value.saturnPhotos,
-                lazyStaggeredGridState,
-                galleryState.value.isFetchingPhotos,
-                onBottomScroll
-            )
+            if (galleryState.value.isLoaded) {
+                GalleryGrid(
+                    sharedTransitionScope,
+                    animatedContentScope,
+                    onOpenPicture,
+                    galleryState.value.saturnPhotos,
+                    lazyStaggeredGridState,
+                    galleryState.value.isFetchingPhotos,
+                    galleryState.value.pendingPhotosToDownload,
+                    onBottomScroll
+                )
+            }
         }
     }
 }
@@ -157,14 +180,14 @@ fun Chips(
         FilterChip(
             onClick = { onSortAndFilter(false, true) },
             label = {
-                Text("Favorites", style = MaterialTheme.typography.labelMedium)
+                Text(getFavorites(), style = MaterialTheme.typography.labelMedium)
             },
             selected = galleryState.isFavoriteSelected,
             leadingIcon = if (galleryState.isFavoriteSelected) {
                 {
                     Icon(
                         imageVector = Icons.Filled.Favorite,
-                        contentDescription = "Filled heart icon",
+                        contentDescription = Icons.Filled.Favorite.name,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )
                 }
@@ -172,13 +195,14 @@ fun Chips(
                 {
                     Icon(
                         imageVector = Icons.Filled.FavoriteBorder,
-                        contentDescription = "Not filled heart icon",
+                        contentDescription = Icons.Filled.FavoriteBorder.name,
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )
                 }
             }
         )
         Spacer(modifier = Modifier.width(8.dp))
+        /* Temporary disabled
         FilterChip(
             selected = galleryState.isAscSortSelected ,
             onClick = { onSortAndFilter(true, false) },
@@ -189,20 +213,28 @@ fun Chips(
                     else Icons.Filled.KeyboardArrowDown,
                 contentDescription = "Arrow" )}
         )
+        */
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GalleryGrid(
-    openPicture: (String) -> Unit,
-    listOfData: List<SaturnPhoto>,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    openPicture: (Long) -> Unit,
+    listOfData: List<SaturnPhotoWithMedia>,
     lazyStaggeredGridState: LazyStaggeredGridState,
     isFetchingPhotos: Boolean,
+    pendingPhotosToDownload: Int,
     onBottomScroll: () -> Unit
 ) {
+    Log.d("Gallery", "Grid")
     var openBottomSheet by remember {
         mutableStateOf(false)
+    }
+    var selectedId by remember {
+        mutableLongStateOf(0)
     }
     LaunchedEffect(lazyStaggeredGridState.canScrollForward) {
         if (!lazyStaggeredGridState.canScrollForward && lazyStaggeredGridState.firstVisibleItemIndex > 0) {
@@ -215,13 +247,6 @@ fun GalleryGrid(
             lazyStaggeredGridState.animateScrollToItem(listOfData.size + 1)
         }
     }
-
-    /*
-    LaunchedEffect(listOfData) {
-        if(lazyStaggeredGridState.layoutInfo.totalItemsCount > 0) {
-            lazyStaggeredGridState.animateScrollToItem(0)
-        }
-    }*/
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(2),
         state = lazyStaggeredGridState,
@@ -229,95 +254,114 @@ fun GalleryGrid(
         verticalItemSpacing = 8.dp,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(listOfData, key = {it.id.toString()}){ saturnPhoto ->
+        items(listOfData, key = {it.saturnPhoto.id.toString()}){ saturnPhoto ->
             ImageItem(
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
                 saturnPhoto = saturnPhoto,
-                modifier = Modifier.animateItemPlacement(
-                        animationSpec = tween(500)
-                ),
-                onClickMore = { openBottomSheet = true }
+                modifier = Modifier
+                    .animateItem(
+                        fadeInSpec = tween(500),
+                        fadeOutSpec = tween(500),
+                        placementSpec = tween(500)
+                    ),
+                onClickMore = {
+                    selectedId = saturnPhoto.saturnPhoto.id
+                    openBottomSheet = true
+                }
             ) {
-                openPicture(saturnPhoto.id.toString())
-                Log.d("Gallery", "Opening: ${saturnPhoto.id}")
+                openPicture(saturnPhoto.saturnPhoto.id)
+                Log.d("Gallery", "Opening: ${saturnPhoto.saturnPhoto.id}")
             }
         }
-        repeat(2){
-            item {
-                if (isFetchingPhotos) {
+        if (isFetchingPhotos) {
+            repeat(pendingPhotosToDownload){
+                item {
                     CircularProgressIndicator(
                         modifier = Modifier.padding(64.dp)
                     )
                 }
             }
         }
-
     }
     if (openBottomSheet) {
-        BottomSheetOptions {
+        BottomSheetOptions(
+           wallpaperBottomSheetViewModel = getKoin().get<WallpaperBottomSheetViewModel>(parameters = { parametersOf(selectedId) })
+        ) {
             openBottomSheet = false
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ImageItem(
-    saturnPhoto: SaturnPhoto,
-    modifier: Modifier,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    saturnPhoto: SaturnPhotoWithMedia,
+    modifier: Modifier = Modifier,
     onClickMore: () -> Unit,
     onItemClick: (String) -> Unit
 ){
-    Column(
-        modifier = modifier
-    ) {
-        AsyncImage(
-            model = ImageRequest
-                .Builder(LocalContext.current)
-                .data(
-                    File(
-                        LocalContext.current.getDir("images", Context.MODE_PRIVATE),
-                        saturnPhoto.regularPath
-                    )
-                )
-                .build(),
-            contentDescription = saturnPhoto.title,
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .clickable { onItemClick(saturnPhoto.id.toString()) }
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp)
+    val saturnMedia = saturnPhoto.getMedia(
+        if(saturnPhoto.saturnPhoto.isVideo) SaturnPhotoMediaType.VIDEO
+        else SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
+    )
+    if (saturnMedia != null) {
+        Column(
+            modifier = modifier
         ) {
-            Text(
-                text = saturnPhoto.date.toDisplayableString(),
-                fontSize = 12.sp,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .align(Alignment.CenterVertically)
-            )
-            if(saturnPhoto.mediaType != "video") {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_more),
-                    contentDescription = "settings",
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                    modifier = Modifier.clickable {
-                        onClickMore()
-                    }
+            with(sharedTransitionScope) {
+                SaturnImage(
+                    filePath = saturnMedia.filepath,
+                    contentDescription = saturnPhoto.saturnPhoto.title,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .sharedElement(
+                            sharedTransitionScope.rememberSharedContentState(key = "image-${saturnPhoto.saturnPhoto.id}"),
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                        .clickable { onItemClick(saturnPhoto.saturnPhoto.id.toString()) }
                 )
             }
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp)
+            ) {
+                Text(
+                    text = saturnPhoto.saturnPhoto.timestamp.toInstant().toDisplayableString(),
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .align(Alignment.CenterVertically)
+                )
+                if(!saturnPhoto.saturnPhoto.isVideo) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_more),
+                        contentDescription = "settings",
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                        modifier = Modifier.clickable {
+                            onClickMore()
+                        }
+                    )
+                }
+            }
+
+
         }
-
-
     }
+
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview()
 @Composable
 fun GalleryPreview() {
-    MyApplicationTheme(
+    SaturnTheme(
         isDarkTheme = true
     ) {
         Scaffold(
@@ -325,13 +369,17 @@ fun GalleryPreview() {
                 BottomNavigation()
             }
         ){
-            GalleryScreen(
-                galleryStateFlow = MutableStateFlow(GalleryState()),
-                onOpenPicture = {},
-                onToggleFiltersVisibility = { /*TODO*/ },
-                onSortAndFilter = {_: Boolean,_:Boolean ->},
-                onBottomScroll = {}
-            )
+            SharedTransitionLayout {
+                /*
+                GalleryScreen(
+                    galleryStateFlow = MutableStateFlow(GalleryState()),
+                    onOpenPicture = {},
+                    onToggleFiltersVisibility = { /*TODO*/ },
+                    onSortAndFilter = {_: Boolean,_:Boolean ->},
+                    onBottomScroll = {}
+                )
+                 */
+            }
             it
         }
     }

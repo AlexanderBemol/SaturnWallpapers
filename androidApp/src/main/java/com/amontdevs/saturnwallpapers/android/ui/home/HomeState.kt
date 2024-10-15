@@ -1,8 +1,8 @@
 package com.amontdevs.saturnwallpapers.android.ui.home
 
-import com.amontdevs.saturnwallpapers.model.SaturnPhoto
+import com.amontdevs.saturnwallpapers.model.SaturnPhotoWithMedia
 
 data class HomeState(
-    val saturnPhoto: SaturnPhoto? = null,
-    val favoritePhotos: List<SaturnPhoto> = listOf()
+    val saturnPhoto: SaturnPhotoWithMedia? = null,
+    val favoritePhotos: List<SaturnPhotoWithMedia> = listOf()
 )

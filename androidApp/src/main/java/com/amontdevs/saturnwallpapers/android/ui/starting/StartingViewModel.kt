@@ -7,8 +7,10 @@ import com.amontdevs.saturnwallpapers.model.AlreadyPopulatedException
 import com.amontdevs.saturnwallpapers.model.SaturnConfig.DAYS_OF_DATA
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
+import com.amontdevs.saturnwallpapers.repository.SaturnPhotosRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -18,44 +20,21 @@ class StartingViewModel(
 ): ViewModel() {
 
     private val _startingState = MutableStateFlow(StartingState())
-    val startingState: StateFlow<StartingState> = _startingState
-    private val stepSize: Int = (100 / DAYS_OF_DATA.inWholeDays).toInt()
+    val startingState = _startingState.asStateFlow()
 
-    fun initialize() {
-        populate()
-        viewModelScope.launch {
-            saturnPhotosRepository.saturnPhotosFlow.collect{
-                val newProgress = _startingState.value.progress + stepSize
-                _startingState.value = _startingState.value.copy(progress = newProgress)
-                Log.d("StartingViewModel", "Flow: $it")
-            }
-        }
+    init {
+        initialize()
     }
 
-    private fun populate(){
+    private fun initialize() {
         viewModelScope.launch {
-            when(val result = saturnPhotosRepository.populate()) {
+            when (val result = saturnPhotosRepository.refresh()){
                 is SaturnResult.Success -> {
                     _startingState.value = _startingState.value.copy(isLoading = false)
                 }
                 is SaturnResult.Error -> {
-                    Log.d("StartingViewModel", "Populate failure $result")
-                    when (result.e){
-                        is AlreadyPopulatedException -> refresh()
-                        else ->_startingState.value = _startingState.value.copy(isLoading = false)
-                    }
+                    Log.d("StartingViewModel", "Refresh failure $result")
                 }
-            }
-        }
-    }
-
-    private suspend fun refresh() {
-        when (val result = saturnPhotosRepository.refresh()){
-            is SaturnResult.Success -> {
-                _startingState.value = _startingState.value.copy(isLoading = false)
-            }
-            is SaturnResult.Error -> {
-                Log.d("StartingViewModel", "Refresh failure $result")
             }
         }
     }
