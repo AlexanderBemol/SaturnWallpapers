@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.crashlytics)
+    alias(libs.plugins.gms)
     alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.performance)
 }
 
 android {
@@ -52,6 +55,10 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.foundation)
     implementation(libs.date.time)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.performance)
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
     implementation(libs.ktor.client.okhttp)
