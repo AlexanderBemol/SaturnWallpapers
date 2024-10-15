@@ -71,7 +71,7 @@ class SaturnPhotosRepository(
                 val today = timeProvider.getCurrentTime()
                 val startDate = timeProvider.getCurrentTime().minus(daysOfData)
                 downloadDaysOfData(startDate, today)
-                saturnSettings.setUserStatus(userStatus.copy(userOnboarded = true))
+                saturnSettings.setUserStatus(userStatus.copy(alreadyPopulated = true))
                 _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished(100.00))
                 SaturnResult.Success(PopulateOperationStatus.Succeeded)
             } else SaturnResult.Success(PopulateOperationStatus.AlreadyPopulated)

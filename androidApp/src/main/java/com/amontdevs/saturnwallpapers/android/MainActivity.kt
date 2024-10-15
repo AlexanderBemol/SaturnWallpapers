@@ -47,7 +47,9 @@ import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryScreen
 import com.amontdevs.saturnwallpapers.android.ui.home.HomeScreen
 import com.amontdevs.saturnwallpapers.android.ui.home.HomeViewModel
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
+import com.amontdevs.saturnwallpapers.android.ui.navigation.ISaturnNavigator
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.ui.navigation.SaturnNavigator
 import com.amontdevs.saturnwallpapers.android.ui.onboarding.OnboardingScreen
 import com.amontdevs.saturnwallpapers.android.ui.onboarding.OnboardingViewModel
 import com.amontdevs.saturnwallpapers.android.ui.photodetail.FullPictureViewScreen
@@ -107,9 +109,11 @@ fun AppContent(navController: NavHostController) {
                     modifier = Modifier.padding(paddingValues)
                 ) {
                     composable(Navigation.Onboarding.title) {
+                        val navigator: ISaturnNavigator = SaturnNavigator(navController)
                         OnboardingScreen(
-                            navController,
-                            koinViewModel<OnboardingViewModel>()
+                            koinViewModel<OnboardingViewModel>(
+                                parameters = { parametersOf(navigator) }
+                            )
                         )
                     }
 
