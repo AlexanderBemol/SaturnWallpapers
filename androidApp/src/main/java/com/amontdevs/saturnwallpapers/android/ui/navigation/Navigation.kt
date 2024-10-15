@@ -38,4 +38,10 @@ sealed class Navigation(
         0,
         false
     )
+    data object Onboarding: Navigation(
+        5,
+        "Onboarding",
+        0,
+        false
+    )
 }

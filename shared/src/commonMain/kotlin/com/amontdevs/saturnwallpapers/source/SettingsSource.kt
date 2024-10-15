@@ -3,12 +3,13 @@ import com.amontdevs.saturnwallpapers.model.DataMaxAge
 import com.amontdevs.saturnwallpapers.model.DefaultSaturnPhoto
 import com.amontdevs.saturnwallpapers.model.MediaQuality
 import com.amontdevs.saturnwallpapers.model.SaturnSettings
+import com.amontdevs.saturnwallpapers.model.UserStatus
 import com.amontdevs.saturnwallpapers.model.WallpaperScreen
 import com.russhwolf.settings.Settings
 
 interface ISettingsSource {
-    fun isAlreadyPopulated(): Boolean
-    fun setAlreadyPopulated()
+    fun getUserStatus(): UserStatus
+    fun setUserStatus(userStatus: UserStatus)
     fun getSettings(): SaturnSettings
     fun saveSettings(saturnSettings: SaturnSettings)
 }
@@ -16,10 +17,16 @@ interface ISettingsSource {
 class SettingsSource(
     private val settings: Settings
 ): ISettingsSource {
-    override fun isAlreadyPopulated(): Boolean =
-        settings.getBoolean(POPULATED_KEY, false)
 
-    override fun setAlreadyPopulated() { settings.putBoolean(POPULATED_KEY, true) }
+    override fun getUserStatus() = UserStatus(
+        userOnboarded = settings.getBoolean(ONBOARDED_KEY, false),
+        alreadyPopulated = settings.getBoolean(POPULATED_KEY, false)
+    )
+
+    override fun setUserStatus(userStatus: UserStatus) {
+        settings.putBoolean(ONBOARDED_KEY, userStatus.userOnboarded)
+        settings.putBoolean(POPULATED_KEY, userStatus.alreadyPopulated)
+    }
 
     override fun getSettings() = SaturnSettings(
         isDailyWallpaperActivated =
@@ -44,6 +51,7 @@ class SettingsSource(
 
     companion object {
         const val POPULATED_KEY = "POPULATED"
+        const val ONBOARDED_KEY = "ONBOARDED"
         const val DAILY_WALLPAPER_UPDATER_KEY = "DAILY_WALLPAPER_UPDATER"
         const val MEDIA_QUALITY_KEY = "MEDIA_QUALITY"
         const val DOWNLOAD_OVER_CELLULAR_KEY = "DOWNLOAD_OVER_CELLULAR"

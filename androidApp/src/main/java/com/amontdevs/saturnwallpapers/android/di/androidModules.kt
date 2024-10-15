@@ -6,6 +6,7 @@ import com.amontdevs.saturnwallpapers.android.system.IAndroidWallpaperSetter
 import com.amontdevs.saturnwallpapers.android.ui.dialogs.wallpaperbottomsheet.WallpaperBottomSheetViewModel
 import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryViewModel
 import com.amontdevs.saturnwallpapers.android.ui.home.HomeViewModel
+import com.amontdevs.saturnwallpapers.android.ui.onboarding.OnboardingViewModel
 import com.amontdevs.saturnwallpapers.android.ui.photodetail.PhotoDetailViewModel
 import com.amontdevs.saturnwallpapers.android.ui.settings.SettingsViewModel
 import com.amontdevs.saturnwallpapers.android.ui.starting.StartingViewModel
@@ -19,6 +20,7 @@ val viewModelModules = module {
     viewModel { params -> PhotoDetailViewModel(get(), get(), params.get(), params.get()) }
     viewModel { params -> SettingsViewModel(get(), get(), params.get()) }
     viewModel { params -> WallpaperBottomSheetViewModel(get(), get(), get(), get(), params.get()) }
+    viewModel { OnboardingViewModel(get(), get()) }
 }
 
 fun buildAndroidWallpaperSetter() : IAndroidWallpaperSetter = AndroidWallpaperSetter()
