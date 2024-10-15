@@ -77,4 +77,25 @@
     <string name="dialog_confirm_text">Confirm</string>
     <string name="dialog_cancel_text">Cancel</string>
 
+    <!--- Onboarding Screen -->
+    <string name="onboarding_next_button">Next</string>
+    <string name="onboarding_go_back_button">Go Back</string>
+    <string name="onboarding_get_started_button">Get Started</string>
+
+    <string name="onboarding_welcome_title">Welcome</string>
+    <string name="onboarding_welcome_description">Welcome to Saturn Wallpapers, your new favorite wallpapers app.</string>
+
+    <string name="onboarding_overview_title">Overview</string>
+    <string name="onboarding_overview_description">Everyday you'll get a new image from the NADA APOD service, explore the gallery, find your favorites, refresh your wallpaper or download them and share them with your friends.</string>
+
+    <string name="onboarding_configure_title">Configure</string>
+    <string name="onboarding_configure_description">You can activate the automatic service, if you do it, every day a new image is going to be set as your wallpaper, do you want to activate it?</string>
+    <string name="onboarding_configure_switch_description">Activate automatic service</string>
+
+    <string name="onboarding_loading_title">Almost there</string>
+    <string name="onboarding_loading_description">We are setting everything up for you, please wait a moment</string>
+
+    <string name="onboarding_done_title">We´re ready</string>
+    <string name="onboarding_done_description">Everything is ready, enjoy your new wallpapers!</string>
+
 </resources>
