@@ -28,35 +28,13 @@ class StartingViewModel(
 
     private fun initialize() {
         viewModelScope.launch {
-            saturnPhotosRepository.saturnPhotoOperation.collect {
-                _startingState.value = _startingState.value.copy(progress = it.progress.toInt())
-                Log.d("StartingViewModel", "Flow: $it")
-            }
-        }
-        viewModelScope.launch {
-            when(val result = saturnPhotosRepository.populate()) {
+            when (val result = saturnPhotosRepository.refresh()){
                 is SaturnResult.Success -> {
-                    when(result.data){
-                        SaturnPhotosRepository.PopulateOperationStatus.Succeeded ->
-                            _startingState.value = _startingState.value.copy(isLoading = false)
-                        SaturnPhotosRepository.PopulateOperationStatus.AlreadyPopulated ->
-                            refresh()
-                    }
+                    _startingState.value = _startingState.value.copy(isLoading = false)
                 }
                 is SaturnResult.Error -> {
-                    Log.d("StartingViewModel", "Populate failure $result")
+                    Log.d("StartingViewModel", "Refresh failure $result")
                 }
-            }
-        }
-    }
-
-    private suspend fun refresh() {
-        when (val result = saturnPhotosRepository.refresh()){
-            is SaturnResult.Success -> {
-                _startingState.value = _startingState.value.copy(isLoading = false)
-            }
-            is SaturnResult.Error -> {
-                Log.d("StartingViewModel", "Refresh failure $result")
             }
         }
     }

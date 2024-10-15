@@ -39,17 +39,19 @@ class SaturnDailyWorker(
             val saturnPhotoToSet = if (todaySaturnPhoto.saturnPhoto.isVideo) getDefaultPhoto(settings.defaultSaturnPhoto)
                 else todaySaturnPhoto
 
-            val media = saturnPhotoToSet.getMedia(
-                when(settings.mediaQuality) {
-                    MediaQuality.NORMAL -> SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE
-                    MediaQuality.HIGH -> SaturnPhotoMediaType.HIGH_QUALITY_IMAGE
-                }
-            )
-            if (media != null) {
-                val photoByteArray = getPhotoByteArray(media.filepath)
+            val regularMedia = saturnPhotoToSet.getMedia(SaturnPhotoMediaType.REGULAR_QUALITY_IMAGE)
+            val highMedia = saturnPhotoToSet.getMedia(SaturnPhotoMediaType.HIGH_QUALITY_IMAGE)
+
+            val photoByteArray =
+                if (highMedia != null && settings.mediaQuality == MediaQuality.HIGH) getPhotoByteArray(highMedia.filepath)
+                else if (regularMedia != null) getPhotoByteArray(regularMedia.filepath)
+                else null
+            if (photoByteArray != null) {
                 androidWallpaperSetter.setWallpaper(settings.wallpaperScreen, photoByteArray)
                 Result.success()
-            } else Result.success()
+            } else {
+                Result.failure()
+            }
         } catch (e: Exception) {
             Log.e("SaturnWorker", e.message, e)
             Result.retry()

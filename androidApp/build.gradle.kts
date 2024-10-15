@@ -7,7 +7,7 @@ android {
     namespace = "com.amontdevs.saturnwallpapers.android"
     compileSdk = 34
     defaultConfig {
-        applicationId = "com.amontdevs.saturnwallpapers.android"
+        applicationId = "com.amontdevs.saturnwallpapers"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
     implementation(libs.ktor.client.okhttp)
+    implementation(libs.lottie.compose)
     implementation(libs.navigation.compose)
     implementation(libs.work)
 

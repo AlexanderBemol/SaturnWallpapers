@@ -76,4 +76,26 @@
     <string name="dialog_confirm_text">Confirmar</string>
     <string name="dialog_cancel_text">Cancelar</string>
 
+    <!--- Onboarding Screen -->
+
+    <string name="onboarding_next_button">Continuar</string>
+    <string name="onboarding_go_back_button">Regresar</string>
+    <string name="onboarding_get_started_button">Comenzar</string>
+
+    <string name="onboarding_welcome_title">Bienvenido</string>
+    <string name="onboarding_welcome_description">Bienvenido a Saturn Wallpapers, tu nueva aplicación favorita de fondos de pantalla.</string>
+
+    <string name="onboarding_overview_title">¿De qué se trata?</string>
+    <string name="onboarding_overview_description">Cada día encontrarás una nueva imagen proporcionada por un servicio de la NASA, explora la galería, encuentra tus imágenes favoritas, actualiza tu fondo de pantalla o descárgalas y compartelas con tus amigos.</string>
+
+    <string name="onboarding_configure_title">Configuración</string>
+    <string name="onboarding_configure_description">Puedes activar el servicio automático de cambio de fondo de pantalla, si lo haces, cada día se va a establecer una nueva imagen como tu fondo de pantalla, ¿deseas activarlo?</string>
+    <string name="onboarding_configure_switch_description">Activar servicio automático</string>
+
+    <string name="onboarding_loading_title">Casi terminado</string>
+    <string name="onboarding_loading_description">Estamos terminando tu configuración, por favor espera un momento</string>
+
+    <string name="onboarding_done_title">Estamos listos</string>
+    <string name="onboarding_done_description">Todo listo, ahora puedes comenzar a usar Saturn Wallpapers.</string>
+
 </resources>

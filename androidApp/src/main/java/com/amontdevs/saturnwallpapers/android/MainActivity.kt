@@ -47,7 +47,11 @@ import com.amontdevs.saturnwallpapers.android.ui.gallery.GalleryScreen
 import com.amontdevs.saturnwallpapers.android.ui.home.HomeScreen
 import com.amontdevs.saturnwallpapers.android.ui.home.HomeViewModel
 import com.amontdevs.saturnwallpapers.android.ui.navigation.BottomNavigation
+import com.amontdevs.saturnwallpapers.android.ui.navigation.ISaturnNavigator
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.ui.navigation.SaturnNavigator
+import com.amontdevs.saturnwallpapers.android.ui.onboarding.OnboardingScreen
+import com.amontdevs.saturnwallpapers.android.ui.onboarding.OnboardingViewModel
 import com.amontdevs.saturnwallpapers.android.ui.photodetail.FullPictureViewScreen
 import com.amontdevs.saturnwallpapers.android.ui.settings.SettingsScreen
 import com.amontdevs.saturnwallpapers.android.ui.starting.StartingScreen
@@ -77,7 +81,6 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppContent(navController: NavHostController) {
-    Log.d("AppContent", "Recomposing AppContent")
     val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val navigateToHome = {
@@ -102,9 +105,18 @@ fun AppContent(navController: NavHostController) {
             SharedTransitionLayout {
                 NavHost(
                     navController = navController,
-                    startDestination = Navigation.Loading.title,
+                    startDestination = Navigation.Onboarding.title,
                     modifier = Modifier.padding(paddingValues)
                 ) {
+                    composable(Navigation.Onboarding.title) {
+                        val navigator: ISaturnNavigator = SaturnNavigator(navController)
+                        OnboardingScreen(
+                            koinViewModel<OnboardingViewModel>(
+                                parameters = { parametersOf(navigator) }
+                            )
+                        )
+                    }
+
                     composable(
                         Navigation.Home.title,
                         enterTransition = {
@@ -205,6 +217,7 @@ fun hideBottomBar(navBackStackEntry: NavBackStackEntry?): Boolean {
     val currentRoute = navBackStackEntry?.destination?.toFixedRoute()
     return Navigation.Details.title.contains(currentRoute.toString()) ||
             Navigation.Loading.title.contains(currentRoute.toString()) ||
+            Navigation.Onboarding.title.contains(currentRoute.toString()) ||
             currentRoute == null
 }
 

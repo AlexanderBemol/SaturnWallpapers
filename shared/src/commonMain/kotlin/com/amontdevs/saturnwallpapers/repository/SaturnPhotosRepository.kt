@@ -64,13 +64,14 @@ class SaturnPhotosRepository(
 
     override suspend fun populate(): SaturnResult<PopulateOperationStatus> {
         return try {
-            if(!saturnSettings.isAlreadyPopulated()) {
+            val userStatus = saturnSettings.getUserStatus()
+            if(!userStatus.alreadyPopulated) {
                 _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress(0.00))
                 val daysOfData = SaturnConfig.DAYS_OF_DATA - 1.days
                 val today = timeProvider.getCurrentTime()
                 val startDate = timeProvider.getCurrentTime().minus(daysOfData)
                 downloadDaysOfData(startDate, today)
-                saturnSettings.setAlreadyPopulated()
+                saturnSettings.setUserStatus(userStatus.copy(alreadyPopulated = true))
                 _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished(100.00))
                 SaturnResult.Success(PopulateOperationStatus.Succeeded)
             } else SaturnResult.Success(PopulateOperationStatus.AlreadyPopulated)
