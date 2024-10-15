@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "4370636599",
+    "project_id": "saturnwallpapers",
+    "storage_bucket": "saturnwallpapers.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4370636599:android:5be12138978f49078b04b2",
+        "android_client_info": {
+          "package_name": "com.amontdevs.saturnwallpapers"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8hTVP-tNMrDhH1Cq5Xi_FgUZZaYL9K3k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
