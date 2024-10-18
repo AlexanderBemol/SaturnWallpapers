@@ -99,4 +99,8 @@
     <string name="onboarding_done_title">Estamos listos</string>
     <string name="onboarding_done_description">Todo listo, ahora puedes comenzar a usar Saturn Wallpapers.</string>
 
+    <!--- Loading Screen -->
+    <string name="loading_title">Cargando</string>"
+    <string name="loading_description">Por favor espera mientras obtenemos los nuevos datos.</string>
+
 </resources>

@@ -99,4 +99,8 @@
     <string name="onboarding_done_title">We´re ready</string>
     <string name="onboarding_done_description">Everything is ready, enjoy your new wallpapers!</string>
 
+    <!--- Loading Screen -->
+    <string name="loading_title">Loading</string>"
+    <string name="loading_description">Please wait while new data is being downloaded.</string>
+
 </resources>
