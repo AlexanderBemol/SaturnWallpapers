@@ -28,7 +28,7 @@ class StartingViewModel(
 
     private fun initialize() {
         viewModelScope.launch {
-            when (val result = saturnPhotosRepository.refresh()){
+            when (val result = saturnPhotosRepository.refresh(false)){
                 is SaturnResult.Success -> {
                     _startingState.value = _startingState.value.copy(isLoading = false)
                 }

@@ -59,7 +59,7 @@ class SaturnDailyWorker(
     }
 
     private suspend fun refreshPhotos() {
-        when(val refreshResult = saturnPhotosRepository.refresh()) {
+        when(val refreshResult = saturnPhotosRepository.refresh(true)) {
             is SaturnResult.Error -> {
                 throw refreshResult.e
             }
