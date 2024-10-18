@@ -53,6 +53,7 @@
 
     <string name="settings_max_age_title">Máximo de tiempo de almacenamiento</string>
     <string name="settings_max_age_description">Define el tiempo máximo de almacenamiento de las imágenes en el dispositivo, las imágenes más antiguas (no favoritas) van a ser borradas.</string>
+    <string name="settings_max_age_option_two_weeks">Dos semanas</string>
     <string name="settings_max_age_option_one_month">Un mes</string>
     <string name="settings_max_age_option_three_months">Tres meses</string>
     <string name="settings_max_age_option_six_months">Seis meses</string>

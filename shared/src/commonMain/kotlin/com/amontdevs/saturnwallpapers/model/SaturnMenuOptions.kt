@@ -28,10 +28,10 @@ enum class WallpaperScreen(
 enum class DataMaxAge(
     override val id: Int
 ): SettingsMenuOptions {
-    ONE_MONTH(0),
-    THREE_MONTHS(1),
-    SIX_MONTHS(2),
-    ONE_YEAR(3);
+    TWO_WEEKS(0),
+    ONE_MONTH(1),
+    THREE_MONTHS(2),
+    SIX_MONTHS(3);
     companion object {
         fun fromInt(value: Int) = entries.first { it.id == value }
     }

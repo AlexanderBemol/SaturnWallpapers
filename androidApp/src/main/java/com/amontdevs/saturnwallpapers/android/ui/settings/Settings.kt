@@ -363,10 +363,10 @@ fun MaxAgeOption(
 ) {
     val menuOptions = DataMaxAge.entries.map {
         when(it) {
+            DataMaxAge.TWO_WEEKS -> Settings.getSettingsMaxAgeOptionTwoWeeks()
             DataMaxAge.ONE_MONTH -> Settings.getSettingsMaxAgeOptionOneMonth()
             DataMaxAge.THREE_MONTHS -> Settings.getSettingsMaxAgeOptionThreeMonths()
             DataMaxAge.SIX_MONTHS -> Settings.getSettingsMaxAgeOptionSixMonths()
-            DataMaxAge.ONE_YEAR -> Settings.getSettingsMaxAgeOptionOneYear()
         }
     }
     OptionRow(

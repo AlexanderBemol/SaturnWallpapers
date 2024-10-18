@@ -5,6 +5,6 @@ data class SaturnSettings(
     val isDownloadOverCellularActivated: Boolean = false,
     val mediaQuality: MediaQuality = MediaQuality.HIGH,
     val wallpaperScreen: WallpaperScreen = WallpaperScreen.ALL,
-    val dataMaxAge: DataMaxAge = DataMaxAge.ONE_MONTH,
+    val dataMaxAge: DataMaxAge = DataMaxAge.TWO_WEEKS,
     val defaultSaturnPhoto: DefaultSaturnPhoto = DefaultSaturnPhoto.RANDOM
 )

@@ -235,10 +235,10 @@ class SaturnPhotosRepository(
     private suspend fun pruneOldData() {
         val currentTime = timeProvider.getCurrentTime()
         val validOldestData = when(saturnSettings.getSettings().dataMaxAge) {
+            DataMaxAge.TWO_WEEKS -> currentTime.minus(14.days)
             DataMaxAge.ONE_MONTH -> currentTime.minus(30.days)
             DataMaxAge.THREE_MONTHS -> currentTime.minus(90.days)
             DataMaxAge.SIX_MONTHS -> currentTime.minus(180.days)
-            DataMaxAge.ONE_YEAR -> currentTime.minus(365.days)
         }
         val dataToDelete = saturnPhotoDao.findOldData(validOldestData.toEpochMilliseconds())
         dataToDelete.forEach { saturnPhotoWithMedia ->
