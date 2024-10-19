@@ -21,6 +21,7 @@ import saturnwallpapers.shared.generated.resources.settings_max_age_option_one_m
 import saturnwallpapers.shared.generated.resources.settings_max_age_option_one_year
 import saturnwallpapers.shared.generated.resources.settings_max_age_option_six_months
 import saturnwallpapers.shared.generated.resources.settings_max_age_option_three_months
+import saturnwallpapers.shared.generated.resources.settings_max_age_option_two_weeks
 import saturnwallpapers.shared.generated.resources.settings_max_age_title
 import saturnwallpapers.shared.generated.resources.settings_quality_confirm_dialog_high_quality_message
 import saturnwallpapers.shared.generated.resources.settings_quality_confirm_dialog_regular_quality_message
@@ -107,6 +108,10 @@ object Settings {
     fun getSettingsMaxAgeDescription() =
         if (LocalInspectionMode.current) "Define the maximum of time the images are going to be stored, after that, if a record is older (and is not a favorite) is going to be deleted."
         else stringResource(Res.string.settings_max_age_description)
+
+    @Composable
+    fun getSettingsMaxAgeOptionTwoWeeks() = if (LocalInspectionMode.current) "Two weeks"
+        else stringResource(Res.string.settings_max_age_option_two_weeks)
 
     @Composable
     fun getSettingsMaxAgeOptionOneMonth() = if (LocalInspectionMode.current) "One month"

@@ -39,7 +39,7 @@ interface ISaturnPhotosRepository {
     suspend fun getAllSaturnPhotos(): SaturnResult<List<SaturnPhotoWithMedia>>
     suspend fun updateSaturnPhoto(saturnPhoto: SaturnPhoto): SaturnResult<Unit>
     suspend fun populateAndGetPastDays(daysOfData: UInt): SaturnResult<Unit>
-    suspend fun refresh(): SaturnResult<Unit>
+    suspend fun refresh(downloadHQToday: Boolean): SaturnResult<Unit>
     suspend fun areDownloadsNeeded(): SaturnResult<Boolean>
     suspend fun downloadNotDownloadedPhotos(): SaturnResult<Unit>
     suspend fun deleteHighQualityPhotos(): SaturnResult<Unit>
@@ -167,7 +167,7 @@ class SaturnPhotosRepository(
         }
     }
 
-    override suspend fun refresh(): SaturnResult<Unit> {
+    override suspend fun refresh(downloadHQToday: Boolean): SaturnResult<Unit> {
         return try {
             _saturnPhotoOperation.emit(RefreshOperationStatus.OperationInProgress())
             //remove old data
@@ -181,7 +181,7 @@ class SaturnPhotosRepository(
             )
             val today = timeProvider.getCurrentTime()
             if(today.minus(lastSavedPhoto) >= 1.days) {
-                downloadDaysOfData(lastSavedPhoto.plus(1.days),today)
+                downloadDaysOfData(lastSavedPhoto.plus(1.days),today, downloadHQToday)
             }
             _saturnPhotoOperation.emit(RefreshOperationStatus.OperationFinished())
             SaturnResult.Success(Unit)
@@ -235,10 +235,10 @@ class SaturnPhotosRepository(
     private suspend fun pruneOldData() {
         val currentTime = timeProvider.getCurrentTime()
         val validOldestData = when(saturnSettings.getSettings().dataMaxAge) {
+            DataMaxAge.TWO_WEEKS -> currentTime.minus(14.days)
             DataMaxAge.ONE_MONTH -> currentTime.minus(30.days)
             DataMaxAge.THREE_MONTHS -> currentTime.minus(90.days)
             DataMaxAge.SIX_MONTHS -> currentTime.minus(180.days)
-            DataMaxAge.ONE_YEAR -> currentTime.minus(365.days)
         }
         val dataToDelete = saturnPhotoDao.findOldData(validOldestData.toEpochMilliseconds())
         dataToDelete.forEach { saturnPhotoWithMedia ->
@@ -252,10 +252,10 @@ class SaturnPhotosRepository(
         saturnPhotoDao.deleteOldData(validOldestData.toEpochMilliseconds())
     }
 
-    private suspend fun downloadDaysOfData(startTime: Instant, endTime: Instant){
+    private suspend fun downloadDaysOfData(startTime: Instant, endTime: Instant, downloadHQToday: Boolean = false){
         val apodModelList = apodService.getPhotoOfDays(startTime.toCommonFormat(), endTime.toCommonFormat())
         val saturnPhotos = convertAndInsertApodModelList(apodModelList)
-        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL, true)
+        downloadMediaAndUpdate(saturnPhotos, MediaQuality.NORMAL, true, downloadHQToday)
     }
 
     private suspend fun downloadDaysOfData(missingDays: List<String>){
@@ -299,7 +299,8 @@ class SaturnPhotosRepository(
     private suspend fun downloadMediaAndUpdate(
         saturnPhotosWithMedia: List<SaturnPhotoWithMedia>,
         quality: MediaQuality? = null,
-        publishPhotos: Boolean = false
+        publishPhotos: Boolean = false,
+        downloadHQToday: Boolean = false
     ) {
         val mediaTypes = when (quality) {
             MediaQuality.NORMAL -> listOf(
@@ -319,10 +320,15 @@ class SaturnPhotosRepository(
             saturnPhotosWithMedia.sortedByDescending { it.saturnPhoto.timestamp }.forEach {
                 saturnPhotoWithMedia ->
 
-                val mediaToDownload = saturnPhotoWithMedia.mediaList
-                    .filter { mediaTypes.contains(it.mediaType)
-                            && it.status != SaturnPhotoMediaStatus.DOWNLOADED
-                    }
+                val mediaToDownload = if (i == 1 && downloadHQToday) {
+                    saturnPhotoWithMedia.mediaList
+                        .filter { it.status != SaturnPhotoMediaStatus.DOWNLOADED }
+                } else {
+                    saturnPhotoWithMedia.mediaList
+                        .filter { mediaTypes.contains(it.mediaType)
+                                && it.status != SaturnPhotoMediaStatus.DOWNLOADED
+                        }
+                }
                 mediaToDownload.forEach {
                     it.downloadMedia(saturnPhotoWithMedia.saturnPhoto)
                 }

@@ -70,6 +70,7 @@ import com.amontdevs.saturnwallpapers.resources.Gallery.getFavorites
 import com.amontdevs.saturnwallpapers.resources.Gallery.getTitle
 import com.amontdevs.saturnwallpapers.utils.toDisplayableString
 import com.amontdevs.saturnwallpapers.utils.toInstant
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.getKoin
 import org.koin.core.parameter.parametersOf
@@ -140,6 +141,7 @@ fun GalleryScreen(
                     style = MaterialTheme.typography.headlineMedium
                 )
                 IconButton(
+                    modifier = Modifier.size(48.dp),
                     onClick = { onToggleFiltersVisibility() }
                 ) {
                     Icon(

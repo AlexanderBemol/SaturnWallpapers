@@ -53,6 +53,7 @@
 
     <string name="settings_max_age_title">Máximo de tiempo de almacenamiento</string>
     <string name="settings_max_age_description">Define el tiempo máximo de almacenamiento de las imágenes en el dispositivo, las imágenes más antiguas (no favoritas) van a ser borradas.</string>
+    <string name="settings_max_age_option_two_weeks">Dos semanas</string>
     <string name="settings_max_age_option_one_month">Un mes</string>
     <string name="settings_max_age_option_three_months">Tres meses</string>
     <string name="settings_max_age_option_six_months">Seis meses</string>
@@ -97,5 +98,9 @@
 
     <string name="onboarding_done_title">Estamos listos</string>
     <string name="onboarding_done_description">Todo listo, ahora puedes comenzar a usar Saturn Wallpapers.</string>
+
+    <!--- Loading Screen -->
+    <string name="loading_title">Cargando</string>"
+    <string name="loading_description">Por favor espera mientras obtenemos los nuevos datos.</string>
 
 </resources>

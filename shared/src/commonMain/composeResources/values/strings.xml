@@ -55,6 +55,7 @@
 
     <string name="settings_max_age_title">Max age of data</string>
     <string name="settings_max_age_description">Define the maximum of time the images are going to be stored, after that, if a record is older (and is not a favorite) is going to be deleted.</string>
+    <string name="settings_max_age_option_two_weeks">Two weeks</string>
     <string name="settings_max_age_option_one_month">One month</string>
     <string name="settings_max_age_option_three_months">Three months</string>
     <string name="settings_max_age_option_six_months">Six months</string>
@@ -97,5 +98,9 @@
 
     <string name="onboarding_done_title">We´re ready</string>
     <string name="onboarding_done_description">Everything is ready, enjoy your new wallpapers!</string>
+
+    <!--- Loading Screen -->
+    <string name="loading_title">Loading</string>"
+    <string name="loading_description">Please wait while new data is being downloaded.</string>
 
 </resources>
