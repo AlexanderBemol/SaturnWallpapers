@@ -11,6 +11,8 @@ import com.amontdevs.saturnwallpapers.model.SaturnSettings
 import com.amontdevs.saturnwallpapers.model.UserStatus
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
 import com.amontdevs.saturnwallpapers.repository.ISettingsRepository
+import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.crashlytics
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -36,6 +38,7 @@ class OnboardingViewModel(
                 result.data
             }
             is SaturnResult.Error -> {
+                Firebase.crashlytics.recordException(result.e)
                 Log.d("OnboardingViewModel", result.e.message.toString())
                 null
             }
@@ -75,6 +78,7 @@ class OnboardingViewModel(
                     )
                 }
                 is SaturnResult.Error -> {
+                    Firebase.crashlytics.recordException(result.e)
                     Log.d("OnboardingViewModel", result.e.message.toString())
                 }
             }
@@ -105,8 +109,10 @@ class OnboardingViewModel(
             ){
                 is SaturnResult.Success ->
                     navigator.navigateToPopInclusive(Navigation.Home, Navigation.Onboarding)
-                is SaturnResult.Error ->
+                is SaturnResult.Error -> {
+                    Firebase.crashlytics.recordException(result.e)
                     Log.d("OnboardingViewModel", result.e.message.toString())
+                }
             }
         }
     }
