@@ -3,6 +3,8 @@ package com.amontdevs.saturnwallpapers.android.ui.photodetail
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.utils.AnalyticsHelper
 import com.amontdevs.saturnwallpapers.model.MediaQuality
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
@@ -21,6 +23,7 @@ class PhotoDetailViewModel(
     val fullViewState: StateFlow<PhotoDetailState> = _fullViewState
 
     init {
+        AnalyticsHelper.screenView(Navigation.Details)
         loadData()
     }
 

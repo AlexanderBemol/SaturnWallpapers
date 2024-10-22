@@ -45,7 +45,7 @@ object Onboarding {
         else stringResource(Res.string.onboarding_overview_title)
 
     @Composable
-    fun getOnboardingOverviewDescription() = if (LocalInspectionMode.current) "Everyday you'll get a new image from the NADA APOD service, explore the gallery, find your favorites, refresh your wallpaper or download them and share them with your friends."
+    fun getOnboardingOverviewDescription() = if (LocalInspectionMode.current) "Everyday you'll get a new image from the NASA APOD service, explore the gallery, find your favorites, refresh your wallpaper or download them and share them with your friends."
         else stringResource(Res.string.onboarding_overview_description)
 
     @Composable
