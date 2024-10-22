@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amontdevs.saturnwallpapers.android.ui.navigation.ISaturnNavigator
 import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.utils.AnalyticsHelper
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.model.SaturnSettings
 import com.amontdevs.saturnwallpapers.model.UserStatus
@@ -23,6 +24,7 @@ class OnboardingViewModel(
     val onboardingState: StateFlow<OnboardingState> = _onboardingState
 
     init {
+        AnalyticsHelper.screenView(Navigation.Onboarding)
         val userStatus = when(val result = settingsRepository.getUserStatus()){
             is SaturnResult.Success -> {
                 val onboardingStatus = if (!result.data.userOnboarded && result.data.alreadyPopulated)
