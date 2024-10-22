@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.utils.AnalyticsHelper
 import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper
 import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper.Companion.isWorkerRunning
 import com.amontdevs.saturnwallpapers.model.DataMaxAge
@@ -35,6 +37,7 @@ class SettingsViewModel(
     private var settingsToConfirm = settingsState.value.settings
 
     init {
+        AnalyticsHelper.screenView(Navigation.Settings)
         loadSettingsState()
     }
 

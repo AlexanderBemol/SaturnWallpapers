@@ -1,10 +1,11 @@
 package com.amontdevs.saturnwallpapers.android.ui.home
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
+import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.utils.AnalyticsHelper
 import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper
 import com.amontdevs.saturnwallpapers.model.SaturnResult
 import com.amontdevs.saturnwallpapers.repository.ISaturnPhotosRepository
@@ -25,6 +26,7 @@ class HomeViewModel(
     val homeState: StateFlow<HomeState> = _homeState
 
     fun loadHomeData() {
+        AnalyticsHelper.screenView(Navigation.Home)
         viewModelScope.launch {
             val result = saturnPhotosRepository.getSaturnPhoto(timeProvider.getCurrentTime())
             when (result) {

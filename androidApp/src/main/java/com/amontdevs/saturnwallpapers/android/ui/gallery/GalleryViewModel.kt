@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
+import com.amontdevs.saturnwallpapers.android.ui.navigation.Navigation
+import com.amontdevs.saturnwallpapers.android.utils.AnalyticsHelper
 import com.amontdevs.saturnwallpapers.android.utils.WorkerHelper
 import com.amontdevs.saturnwallpapers.model.RefreshOperationStatus
 import com.amontdevs.saturnwallpapers.model.SaturnPhoto
@@ -26,6 +28,7 @@ class GalleryViewModel(
     val galleryState: StateFlow<GalleryState>  = _galleryState
 
     fun loadData() {
+        AnalyticsHelper.screenView(Navigation.Gallery)
         viewModelScope.launch {
             _galleryState.value = _galleryState.value.copy(isLoaded = false)
             when(val result = saturnPhotosRepository.getAllSaturnPhotos()) {
