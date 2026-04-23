@@ -13,8 +13,8 @@ android {
         applicationId = "com.amontdevs.saturnwallpapers"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 5
+        versionName = "1.0.4"
     }
     buildFeatures {
         compose = true
