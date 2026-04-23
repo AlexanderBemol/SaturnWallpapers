@@ -15,6 +15,9 @@ android {
         targetSdk = 36
         versionCode = 5
         versionName = "1.0.4"
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))
+        }
     }
     buildFeatures {
         compose = true
@@ -23,6 +26,9 @@ android {
         kotlinCompilerExtensionVersion = libs.versions.android.compose.compiler.get()
     }
     packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
