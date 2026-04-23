@@ -13,8 +13,11 @@ android {
         applicationId = "com.amontdevs.saturnwallpapers"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 6
+        versionName = "1.0.5"
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))
+        }
     }
     buildFeatures {
         compose = true
@@ -23,6 +26,9 @@ android {
         kotlinCompilerExtensionVersion = libs.versions.android.compose.compiler.get()
     }
     packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
