@@ -245,7 +245,6 @@ fun BottomSheetPreview() {
     ) {
         BottomSheetScaffold(
             scaffoldState = state,
-            //sheetContent = {BottomSheetContent()},
             sheetContent = { BottomSheetContent(
                 wallpaperBottomSheetStateFlow = MutableStateFlow(WallpaperBottomSheetState()),
                 onWallpaperHomeClick = {},
